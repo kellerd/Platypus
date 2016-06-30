@@ -1,0 +1,17 @@
+Reading file a2empty.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  1
+The current size of the buffer is:  0
+
+Printing input buffer contents:
+
+
+
+Parsing the source file...
+
+PLATY: Syntax error:  Line:  1
+*****  Token code:  1 Attribute: NA
+
+Collecting garbage...

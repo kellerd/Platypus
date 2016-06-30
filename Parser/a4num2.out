@@ -1,0 +1,82 @@
+Reading file a4num2.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  538
+The current size of the buffer is:  537
+
+Printing input buffer contents:
+
+PLATYPUS {
+
+\> iThink is by default  integer
+iThink = 3.5;        \> changed floating point
+                  
+\> variable of type string
+iDream$ = 7;		\> illegal					
+
+iFloat = 7.7;    \> the default type is changed to foating-point
+iFloat = 7;      \> still floating-point - 7.0 will be assigned to iFloat			
+iFloat = i;      \> still floating-point (i is an integer variable initialized to zero)
+iFloat =  "abc ";  \> illegal
+
+\> Default float
+Float = 1 + 1 - 4;	\> Still float, not a constant
+Float = 7 * 4 - 7.0;    \> Still float
+}
+
+Parsing the source file...
+
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Syntax error:  Line:  7
+*****  Token code:  5 Attribute: 7
+PLATY: Primary string expression parsed
+PLATY: String expression parsed
+PLATY: Assignment expression (string) parsed
+PLATY: Syntax error:  Line:  7
+*****  Token code:  5 Attribute: 7
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Syntax error:  Line: 12
+*****  Token code:  6 Attribute: abc 
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Syntax error:  Line: 12
+*****  Token code:  6 Attribute: abc 
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Multiplicative arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Program parsed
+PLATY: Source file parsed
+
+Syntax errors: 2
+
+Collecting garbage...

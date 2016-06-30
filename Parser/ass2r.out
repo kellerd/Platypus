@@ -1,0 +1,142 @@
+Reading file ass2r.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  585
+The current size of the buffer is:  584
+
+Printing input buffer contents:
+
+\> This program calculates the sum of 32767 even numbers.
+\> The program is "lexically" and "syntactically" correct
+\> and should not produce any error
+PLATYPUS {
+ 
+ a=+0.0;
+ 
+ sum008 = 0. ;
+ READ(a,sum008); 
+ i= 0h0;
+ FOR(,i < 32767 OR i == 0h7FFF, )DO{
+   i = i + (0hB - 0hA);
+   a=
+   a*2./.5
+   ;
+   sum008 = sum008 + a - 1 ;
+ };
+ IF(text$ == "")THEN{
+   text$ = "prog" << "ram";
+ } ELSE {
+   text$ = text$ << "ram";
+ }
+ WRITE("\* This is a platypus -:)-<-<-- \*");
+ WRITE(text$);
+ 
+ IF(text$ == "program" OR sum008!=.0 AND i>0h0010)THEN{
+  WRITE(sum008);
+  i=0;
+  WRITE();
+ };
+}
+
+
+Parsing the source file...
+
+PLATY: Primary arithmetic expression parsed
+PLATY: Unary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Variable list parsed
+PLATY: READ statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Logical OR expression parsed
+PLATY: Conditional expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Multiplicative arithmetic expression parsed
+PLATY: Multiplicative arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: FOR statement parsed
+PLATY: Primary string expression parsed
+PLATY: Primary s_relational expression parsed
+PLATY: Primary string expression parsed
+PLATY: Primary s_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Conditional expression parsed
+PLATY: Primary string expression parsed
+PLATY: Primary string expression parsed
+PLATY: String expression parsed
+PLATY: Assignment expression (string) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary string expression parsed
+PLATY: Primary string expression parsed
+PLATY: String expression parsed
+PLATY: Assignment expression (string) parsed
+PLATY: Assignment statement parsed
+PLATY: IF statement parsed
+PLATY: Output list (string literal) parsed
+PLATY: WRITE statement parsed
+PLATY: Variable list parsed
+PLATY: WRITE statement parsed
+PLATY: Primary string expression parsed
+PLATY: Primary s_relational expression parsed
+PLATY: Primary string expression parsed
+PLATY: Primary s_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Logical AND expression parsed
+PLATY: Logical OR expression parsed
+PLATY: Conditional expression parsed
+PLATY: Variable list parsed
+PLATY: WRITE statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Output list (empty) parsed
+PLATY: WRITE statement parsed
+PLATY: IF statement parsed
+PLATY: Program parsed
+PLATY: Source file parsed
+
+Collecting garbage...

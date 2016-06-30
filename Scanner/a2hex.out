@@ -1,0 +1,22 @@
+Reading file a2hex.pls ....Please wait
+
+Printing buffer parameters:
+
+The capacity of the buffer is:  24
+The current size of the buffer is:  23
+
+Printing buffer contents:
+
+0h00
+0h000
+0h01
+0h00001
+Scanning source file...
+
+Token		Attribute
+----------------------------------
+ERR_T		0h00
+ERR_T		0h000
+IL_T		1
+ERR_T		0h00001
+SEOF_T

@@ -1,0 +1,15 @@
+/Tde/x/l/v/c/k /V3.10 /LC:\BC5\LIB +
+-v+ C:\BC5\LIB\C0L.OBJ+
+-v+ INTERP.OBJ+
+-v+ LIST.OBJ+
+-v+ PARSER.OBJ+
+-v+ STABLE.OBJ+
+-v+ PLATY.OBJ+
+-v+ SCANNER.OBJ+
+-v+ BUFFER.OBJ
+DK_PPPI.EXE
+
+-v+ C:\BC5\LIB\FP87.LIB+
+-v+ C:\BC5\LIB\MATHL.LIB+
+-v+ C:\BC5\LIB\CL.LIB
+

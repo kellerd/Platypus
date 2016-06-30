@@ -1,0 +1,16 @@
+Reading file a2comm.pls ....Please wait
+
+Printing buffer parameters:
+
+The capacity of the buffer is:  3
+The current size of the buffer is:  2
+
+Printing buffer contents:
+
+\>
+Scanning source file...
+
+Token		Attribute
+----------------------------------
+ERR_T		ÿ
+SEOF_T

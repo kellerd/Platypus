@@ -1,0 +1,59 @@
+Reading file a4state.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  138
+The current size of the buffer is:  137
+
+Printing input buffer contents:
+
+PLATYPUS {
+
+s$ = a - 5 \> Error on a
+a$ = 5;	\> EOS terminator is here, choke on =
+
+a$ = a << "asdf";
+
+a = "asdf" << a$;
+
+a$ = a$ + 5;
+
+}
+
+Parsing the source file...
+
+PLATY: Syntax error:  Line:  3
+*****  Token code:  2 Attribute: a
+PLATY: Primary string expression parsed
+PLATY: String expression parsed
+PLATY: Assignment expression (string) parsed
+PLATY: Syntax error:  Line:  3
+*****  Token code:  2 Attribute: a
+PLATY: Assignment statement parsed
+PLATY: Syntax error:  Line:  6
+*****  Token code:  2 Attribute: a
+PLATY: Primary string expression parsed
+PLATY: String expression parsed
+PLATY: Assignment expression (string) parsed
+PLATY: Syntax error:  Line:  6
+*****  Token code:  2 Attribute: a
+PLATY: Assignment statement parsed
+PLATY: Syntax error:  Line:  8
+*****  Token code:  6 Attribute: asdf
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Syntax error:  Line:  8
+*****  Token code:  6 Attribute: asdf
+PLATY: Assignment statement parsed
+PLATY: Primary string expression parsed
+PLATY: String expression parsed
+PLATY: Assignment expression (string) parsed
+PLATY: Syntax error:  Line: 10
+*****  Token code:  9 Attribute: 0
+PLATY: Assignment statement parsed
+PLATY: Program parsed
+PLATY: Source file parsed
+
+Syntax errors: 4
+
+Collecting garbage...

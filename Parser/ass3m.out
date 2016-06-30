@@ -1,0 +1,138 @@
+Reading file ass3m.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  405
+The current size of the buffer is:  404
+
+Printing input buffer contents:
+
+\> This program calculates the sum and the average
+\> of 5 numbers
+PLATYPUS {
+day1 = 1.;
+day2 = 2.;
+day3 = 3.;
+day4 = 4.;
+day5 = 5.;
+sum = day1 + day2 + day3 + day4 + day5; 
+avg = 0.0;
+temp = sum;
+WRITE("Calculating...
+ sum and avg");
+res$ = "Result\n";
+i = 0; n=00;
+FOR (,temp > 5.0 OR temp == 5.0,)DO {
+  temp = temp - 5.0;
+  avg = avg + 1.0;
+  i = i + 01;
+};
+WRITE(res$);
+WRITE(sum);
+WRITE(i,avg);
+}
+
+
+
+Parsing the source file...
+
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Output list (string literal) parsed
+PLATY: WRITE statement parsed
+PLATY: Primary string expression parsed
+PLATY: String expression parsed
+PLATY: Assignment expression (string) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Syntax error:  Line: 15
+*****  Token code:  0 Attribute: 00
+PLATY: Syntax error:  Line: 15
+*****  Token code: 18 Attribute: NA
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Logical OR expression parsed
+PLATY: Conditional expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Syntax error:  Line: 19
+*****  Token code:  0 Attribute: 01
+PLATY: Syntax error:  Line: 19
+*****  Token code: 18 Attribute: NA
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: FOR statement parsed
+PLATY: Variable list parsed
+PLATY: WRITE statement parsed
+PLATY: Variable list parsed
+PLATY: WRITE statement parsed
+PLATY: Variable list parsed
+PLATY: WRITE statement parsed
+PLATY: Program parsed
+PLATY: Source file parsed
+
+Syntax errors: 2
+
+Collecting garbage...

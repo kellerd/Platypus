@@ -1,0 +1,124 @@
+Reading file a4num.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  433
+The current size of the buffer is:  432
+
+Printing input buffer contents:
+
+PLATYPUS {
+
+\> Legal decimal constants
+ a = 0 + 109 + 17100;
+\> Some illegal decimal constants, legals are for error handler
+ b = 007 + 0095;
+\> Some legal hexidecimal
+ c = 0h0 - 0h7F * 0h007F / 0h00FA + (0h750 - 0h0750) -0h7FFF;
+\> Some illegal decimal constants
+ d = 0H07 - 0hfab * 0xWRONG / 0h * 73;
+\>Legal fpl
+ e = 0.0 - 0.00 + (0.010 + ( 0. - 1.) * 880. - .0) / .002 -  .7 + 7.7;
+\>Illegal fpl
+ f = 01.0 + 002.0 - 00.0 * . ;
+}
+
+Parsing the source file...
+
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Syntax error:  Line:  6
+*****  Token code:  0 Attribute: 00
+PLATY: Primary arithmetic expression parsed
+PLATY: Syntax error:  Line:  6
+*****  Token code:  0 Attribute: 00
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Multiplicative arithmetic expression parsed
+PLATY: Multiplicative arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Syntax error:  Line: 10
+*****  Token code:  0 Attribute: 0H
+PLATY: Syntax error:  Line: 10
+*****  Token code:  0 Attribute: 07
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Syntax error:  Line: 10
+*****  Token code:  0 Attribute: 07
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Multiplicative arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Multiplicative arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Syntax error:  Line: 14
+*****  Token code:  0 Attribute: 01
+PLATY: Primary arithmetic expression parsed
+PLATY: Syntax error:  Line: 14
+*****  Token code:  0 Attribute: 00
+PLATY: Primary arithmetic expression parsed
+PLATY: Syntax error:  Line: 14
+*****  Token code:  0 Attribute: 00
+PLATY: Primary arithmetic expression parsed
+PLATY: Syntax error:  Line: 14
+*****  Token code:  0 Attribute: .
+PLATY: Syntax error:  Line: 14
+*****  Token code: 18 Attribute: NA
+PLATY: Primary arithmetic expression parsed
+PLATY: Multiplicative arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Program parsed
+PLATY: Source file parsed
+
+Syntax errors: 8
+
+Collecting garbage...

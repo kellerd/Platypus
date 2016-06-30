@@ -1,0 +1,16 @@
+Reading file a2slash.pls ....Please wait
+
+Printing buffer parameters:
+
+The capacity of the buffer is:  2
+The current size of the buffer is:  1
+
+Printing buffer contents:
+
+\
+Scanning source file...
+
+Token		Attribute
+----------------------------------
+ERR_T		\
+SEOF_T

@@ -1,0 +1,36 @@
+Reading file a3vars2.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  258
+The current size of the buffer is:  257
+The reallocation flag is:   0
+
+Printing input buffer contents:
+
+I
+i
+n$
+abcdef1234567890 \> Length 16
+abcdef12345678a0a \> Length 17
+abcdef12345678a0b \> Length 17 same, will find in symbol table
+
+abcdef123456789$ \> Length 16
+abcdef12345678a0a$ \> Length 17
+abcdef12345678a0b$ \> Length 17 same, will find in symbol table
+Scanning source file...
+
+
+Symbol Table
+____________
+
+Line Number Variable Identifier
+ 1          I
+ 2          i
+ 3          n$
+ 4          abcdef1234567890
+ 5          abcdef12345678a0
+ 8          abcdef123456789$
+ 9          abcdef12345678a$
+
+Collecting garbage...

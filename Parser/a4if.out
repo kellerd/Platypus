@@ -1,0 +1,98 @@
+Reading file a4if.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  224
+The current size of the buffer is:  223
+
+Printing input buffer contents:
+
+PLATYPUS {
+
+IF (Conditional == Expression) THEN {
+    statements = 83;
+} ELSE { 
+    beep = 5;
+};
+
+IF ($Ex > 5) THEN {
+
+}
+
+IF (A == b) THEN {
+	a =5;
+	b = 7;
+} ELSE {
+
+}
+
+IF (a > b) { 		THEN {
+	a = b;
+};
+
+ELSE {
+a = b }
+;
+
+}
+
+Parsing the source file...
+
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Conditional expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: IF statement parsed
+PLATY: Syntax error:  Line:  9
+*****  Token code:  0 Attribute: $
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Conditional expression parsed
+PLATY: Syntax error:  Line: 11
+*****  Token code: 15 Attribute: NA
+PLATY: IF statement parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Conditional expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Syntax error:  Line: 18
+*****  Token code: 15 Attribute: NA
+PLATY: IF statement parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Conditional expression parsed
+PLATY: Syntax error:  Line: 20
+*****  Token code: 14 Attribute: NA
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: IF statement parsed
+PLATY: Syntax error:  Line: 24
+*****  Token code: 16 Attribute: ELSE
+PLATY: Program parsed
+PLATY: Syntax error:  Line: 26
+*****  Token code: 18 Attribute: NA
+PLATY: Source file parsed
+
+Syntax errors: 4
+
+Collecting garbage...

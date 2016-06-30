@@ -1,0 +1,87 @@
+Reading file a4AND.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  221
+The current size of the buffer is:  220
+
+Printing input buffer contents:
+
+PLATYPUS {
+     a = 1;
+     b = 2;
+     IF (b > a AND c == 0 OR a == 0 AND x < b) THEN {
+         FOR (a = b & 3, a$ != "a", ) DO {};
+     };             
+     FOR (a = b & 3, a$ != "a" AND (B == 1 OR A == 5), ) DO {};
+}
+
+Parsing the source file...
+
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Logical AND expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Logical AND expression parsed
+PLATY: Logical OR expression parsed
+PLATY: Conditional expression parsed
+PLATY: Syntax error:  Line:  5
+*****  Token code:  0 Attribute: &
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Syntax error:  Line:  5
+*****  Token code:  5 Attribute: 3
+PLATY: Primary string expression parsed
+PLATY: Primary s_relational expression parsed
+PLATY: Primary string expression parsed
+PLATY: Primary s_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Conditional expression parsed
+PLATY: Opt_statements parsed
+PLATY: FOR statement parsed
+PLATY: IF statement parsed
+PLATY: Syntax error:  Line:  7
+*****  Token code:  0 Attribute: &
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Syntax error:  Line:  7
+*****  Token code:  5 Attribute: 3
+PLATY: Primary string expression parsed
+PLATY: Primary s_relational expression parsed
+PLATY: Primary string expression parsed
+PLATY: Primary s_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Syntax error:  Line:  7
+*****  Token code: 12 Attribute: NA
+PLATY: Relational expression parsed
+PLATY: Logical AND expression parsed
+PLATY: Conditional expression parsed
+PLATY: Syntax error:  Line:  7
+*****  Token code: 12 Attribute: NA
+PLATY: Opt_statements parsed
+PLATY: FOR statement parsed
+PLATY: Program parsed
+PLATY: Source file parsed
+
+Syntax errors: 5
+
+Collecting garbage...

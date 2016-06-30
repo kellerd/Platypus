@@ -1,0 +1,51 @@
+Reading file a4unary.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  46
+The current size of the buffer is:  45
+
+Printing input buffer contents:
+
+PLATYPUS {
+
+b = -a+5.0;
+c = --a;
+d = a+-b;
+
+}
+
+Parsing the source file...
+
+PLATY: Primary arithmetic expression parsed
+PLATY: Unary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Syntax error:  Line:  3
+*****  Token code:  9 Attribute: 0
+PLATY: Assignment statement parsed
+PLATY: Syntax error:  Line:  4
+*****  Token code:  9 Attribute: 1
+PLATY: Primary arithmetic expression parsed
+PLATY: Unary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Syntax error:  Line:  4
+*****  Token code:  9 Attribute: 1
+PLATY: Assignment statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Syntax error:  Line:  5
+*****  Token code:  9 Attribute: 1
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: Program parsed
+PLATY: Source file parsed
+
+Syntax errors: 2
+
+Collecting garbage...

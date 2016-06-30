@@ -1,0 +1,17 @@
+Reading file a2hello.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  6
+The current size of the buffer is:  5
+
+Printing input buffer contents:
+
+Hello
+
+Parsing the source file...
+
+PLATY: Syntax error:  Line:  1
+*****  Token code:  2 Attribute: Hello
+
+Collecting garbage...

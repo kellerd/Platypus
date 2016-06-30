@@ -1,0 +1,94 @@
+Reading file ass4w4.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  386
+The current size of the buffer is:  385
+
+Printing input buffer contents:
+
+\>This program contains syntax errors
+\>Addition to Murphy's laws:
+\>"In nature, nothing is ever right. Therefore,
+\>if everything is going right ... something is wrong."
+
+PLATYPUS{
+  FOR(,a == b * c,)DO{
+   IF()THEN{a=b!=c;}ELSE ELSE{}
+    FOR(,good$ != "a",)DO{good$ = "a";}
+    a = (a  bad$) + (bad bad) * (bad .7);
+   };
+  IF (c > 0)THEN{}
+  WRITE("Imagine all the scanners );
+ }
+}
+
+Parsing the source file...
+
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Conditional expression parsed
+PLATY: Syntax error:  Line:  7
+*****  Token code:  9 Attribute: 2
+PLATY: Syntax error:  Line:  8
+*****  Token code: 13 Attribute: NA
+PLATY: Relational expression parsed
+PLATY: Conditional expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Syntax error:  Line:  8
+*****  Token code: 10 Attribute: 1
+PLATY: Assignment statement parsed
+PLATY: Syntax error:  Line:  8
+*****  Token code: 16 Attribute: ELSE
+PLATY: Syntax error:  Line:  8
+*****  Token code: 15 Attribute: NA
+PLATY: IF statement parsed
+PLATY: Primary string expression parsed
+PLATY: Primary s_relational expression parsed
+PLATY: Primary string expression parsed
+PLATY: Primary s_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Conditional expression parsed
+PLATY: Primary string expression parsed
+PLATY: String expression parsed
+PLATY: Assignment expression (string) parsed
+PLATY: Assignment statement parsed
+PLATY: FOR statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Syntax error:  Line: 10
+*****  Token code:  3 Attribute: bad$
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Syntax error:  Line: 10
+*****  Token code:  2 Attribute: bad
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Syntax error:  Line: 10
+*****  Token code:  4 Attribute:   0.7
+PLATY: Primary arithmetic expression parsed
+PLATY: Multiplicative arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: FOR statement parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Conditional expression parsed
+PLATY: Syntax error:  Line: 12
+*****  Token code: 15 Attribute: NA
+PLATY: IF statement parsed
+PLATY: Syntax error:  Line: 15
+*****  Token code:  0 Attribute: "Imagine all the ...
+PLATY: Output list (empty) parsed
+PLATY: Syntax error:  Line: 15
+*****  Token code:  1 Attribute: NA
+
+Collecting garbage...

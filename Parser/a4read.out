@@ -1,0 +1,60 @@
+Reading file a4read.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  264
+The current size of the buffer is:  263
+
+Printing input buffer contents:
+
+PLATYPUS {
+	READ(Var1, var2$, var3);\> Correct
+	READ(var1, var2, ); 
+	READ();	\> Empty list
+	READ(var1, "asdf", var2, var3);		\> String literal
+	READ(var1, "asdf"var2, var3, "pie"); \> String literal
+	READ(,whoops);
+	READ(correct);
+	READ(
+
+}
+\> Whooops found EOF
+
+
+Parsing the source file...
+
+PLATY: Variable list parsed
+PLATY: READ statement parsed
+PLATY: Syntax error:  Line:  3
+*****  Token code: 13 Attribute: NA
+PLATY: Variable list parsed
+PLATY: READ statement parsed
+PLATY: Syntax error:  Line:  4
+*****  Token code: 13 Attribute: NA
+PLATY: Variable list parsed
+PLATY: READ statement parsed
+PLATY: Syntax error:  Line:  5
+*****  Token code:  6 Attribute: asdf
+PLATY: Variable list parsed
+PLATY: Syntax error:  Line:  5
+*****  Token code:  6 Attribute: asdf
+PLATY: READ statement parsed
+PLATY: Syntax error:  Line:  6
+*****  Token code:  6 Attribute: asdf
+PLATY: Variable list parsed
+PLATY: Syntax error:  Line:  6
+*****  Token code:  6 Attribute: asdf
+PLATY: READ statement parsed
+PLATY: Syntax error:  Line:  7
+*****  Token code: 17 Attribute: NA
+PLATY: Variable list parsed
+PLATY: READ statement parsed
+PLATY: Variable list parsed
+PLATY: READ statement parsed
+PLATY: Syntax error:  Line: 11
+*****  Token code: 15 Attribute: NA
+PLATY: Variable list parsed
+PLATY: Syntax error:  Line: 11
+*****  Token code: 15 Attribute: NA
+
+Collecting garbage...

@@ -1,0 +1,57 @@
+Reading file a4write.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  265
+The current size of the buffer is:  264
+
+Printing input buffer contents:
+
+PLATYPUS {
+	WRITE(Var1, var2$, var3);\> Correct
+	WRITE(var1, var2, );
+	WRITE();	\> Correct
+	WRITE(var1, "asdf", var2, var3); \> STR literal inside var list
+	WRITE(var1, "asdf"var2, var3, "pie");
+	WRITE(,whoops);
+	WRITE(a a = b + b);
+	WRITE(
+
+}
+\> Whooops found EOF
+
+Parsing the source file...
+
+PLATY: Variable list parsed
+PLATY: WRITE statement parsed
+PLATY: Syntax error:  Line:  3
+*****  Token code: 13 Attribute: NA
+PLATY: Variable list parsed
+PLATY: WRITE statement parsed
+PLATY: Output list (empty) parsed
+PLATY: WRITE statement parsed
+PLATY: Syntax error:  Line:  5
+*****  Token code:  6 Attribute: asdf
+PLATY: Variable list parsed
+PLATY: Syntax error:  Line:  5
+*****  Token code:  6 Attribute: asdf
+PLATY: WRITE statement parsed
+PLATY: Syntax error:  Line:  6
+*****  Token code:  6 Attribute: asdf
+PLATY: Variable list parsed
+PLATY: Syntax error:  Line:  6
+*****  Token code:  6 Attribute: asdf
+PLATY: WRITE statement parsed
+PLATY: Output list (empty) parsed
+PLATY: Syntax error:  Line:  7
+*****  Token code: 17 Attribute: NA
+PLATY: WRITE statement parsed
+PLATY: Variable list parsed
+PLATY: Syntax error:  Line:  8
+*****  Token code:  2 Attribute: a
+PLATY: WRITE statement parsed
+PLATY: Output list (empty) parsed
+PLATY: Syntax error:  Line: 11
+*****  Token code: 15 Attribute: NA
+
+Collecting garbage...

@@ -1,0 +1,22 @@
+Reading file a4prg.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  33
+The current size of the buffer is:  32
+
+Printing input buffer contents:
+
+PLATYPUS {
+
+\> OPT statements
+
+}
+
+Parsing the source file...
+
+PLATY: Opt_statements parsed
+PLATY: Program parsed
+PLATY: Source file parsed
+
+Collecting garbage...

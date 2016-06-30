@@ -1,0 +1,28 @@
+Reading file a4EOF.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  78
+The current size of the buffer is:  77
+
+Printing input buffer contents:
+
+PLATYPUS {
+
+\> OPT statements
+
+}
+
+Things after end of program (for match EOF)
+
+Parsing the source file...
+
+PLATY: Opt_statements parsed
+PLATY: Program parsed
+PLATY: Syntax error:  Line:  7
+*****  Token code:  2 Attribute: Things
+PLATY: Source file parsed
+
+Syntax errors: 1
+
+Collecting garbage...

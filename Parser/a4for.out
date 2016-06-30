@@ -1,0 +1,144 @@
+Reading file a4for.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  362
+The current size of the buffer is:  361
+
+Printing input buffer contents:
+
+PLATYPUS {
+
+FOR (,,,) DO { }; 	
+
+FOR (,a == b, a = b) {
+
+DO {
+	s = 6;
+}
+
+
+FOR (a$ = "s", f != 1, ) DO {
+	b$ = "a";
+};
+
+FOR(,balance>0.0 AND debit<100.0 AND T$=="Y", debit=debit*2)DO{
+balance = balance - debit; 
+};
+
+FOR(,balance>0.0,)DO{
+balance = balance - debit; 
+}
+
+
+
+FOR(a = 1,balance>0.0,)DO{
+\> GOod
+}
+
+FOR(, ,)DO{ \> Bad
+balance = balance - debit; 
+};
+
+
+}
+
+Parsing the source file...
+
+PLATY: Syntax error:  Line:  3
+*****  Token code: 17 Attribute: NA
+PLATY: Relational expression parsed
+PLATY: Conditional expression parsed
+PLATY: Syntax error:  Line:  3
+*****  Token code: 17 Attribute: NA
+PLATY: Opt_statements parsed
+PLATY: FOR statement parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Conditional expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Syntax error:  Line:  5
+*****  Token code: 14 Attribute: NA
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: FOR statement parsed
+PLATY: Primary string expression parsed
+PLATY: String expression parsed
+PLATY: Assignment expression (string) parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Conditional expression parsed
+PLATY: Primary string expression parsed
+PLATY: String expression parsed
+PLATY: Assignment expression (string) parsed
+PLATY: Assignment statement parsed
+PLATY: FOR statement parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Primary string expression parsed
+PLATY: Primary s_relational expression parsed
+PLATY: Primary string expression parsed
+PLATY: Primary s_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Logical AND expression parsed
+PLATY: Logical AND expression parsed
+PLATY: Conditional expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Multiplicative arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: FOR statement parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Conditional expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: FOR statement parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Primary a_relational expression parsed
+PLATY: Relational expression parsed
+PLATY: Conditional expression parsed
+PLATY: Opt_statements parsed
+PLATY: FOR statement parsed
+PLATY: Syntax error:  Line: 30
+*****  Token code: 17 Attribute: NA
+PLATY: Relational expression parsed
+PLATY: Conditional expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Primary arithmetic expression parsed
+PLATY: Additive arithmetic expression parsed
+PLATY: Arithmetic expression parsed
+PLATY: Assignment expression (arithmetic) parsed
+PLATY: Assignment statement parsed
+PLATY: FOR statement parsed
+PLATY: Program parsed
+PLATY: Source file parsed
+
+Syntax errors: 2
+
+Collecting garbage...

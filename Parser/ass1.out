@@ -1,0 +1,25 @@
+Reading file ass1.pls ....Please wait
+
+Printing input buffer parameters:
+
+The capacity of the buffer is:  320
+The current size of the buffer is:  319
+
+Printing input buffer contents:
+
+Compilers  are  fundamental  to  modern  computing.
+They  act  as  translators,  transforming  human-oriented
+language  into  computer-oriented  machine-language.
+A compiler allows virtually all computer users to
+ignore the  machine-dependent  details of machine language.
+Isn't that nice?  -:)
+  
+CST8152
+Summer,  2004
+
+Parsing the source file...
+
+PLATY: Syntax error:  Line:  1
+*****  Token code:  2 Attribute: Compilers
+
+Collecting garbage...
