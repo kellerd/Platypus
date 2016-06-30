@@ -137,24 +137,3 @@ let pWhiteSpace =  anyOf ['\t';'\f';'\v';' '] <|> pLineTerminator
 
 
 run (pWhiteSpace) "\r\nBC"     
-    //     let innerFn str = 
-    //         if String.IsNullOrEmpty(str) then
-    //             Failure "No more input"
-    //         else
-    //             let first = str.[0] 
-    //             if first = charToMatch then
-    //                 let remaining = str.[1..]
-    //                 Success (charToMatch,remaining)
-    //             else
-    //                 let msg = sprintf "Expecting '%c'. Got '%c'" charToMatch first
-    //                 Failure msg
-    //     Parser innerFn
-    // let pany  str = parse {
-
-
-    // } 
-    // let thenParse parser1 parser2 = 
-    //     let innerFn input =
-    //         run parser input |> function
-    //             | Success (value,left) -> 
-    //                 run parser2 left
