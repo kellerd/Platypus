@@ -1,5 +1,9 @@
 type SEOF = SEOF
-type OneOrMany<'a> = | Single of 'a | Many of OneOrMany<'a>
+type OneOrMany<'a> = | One of 'a | Many of 'a * 'a list
+ with static member toList oneOrMany = 
+                    match oneOrMany with
+                    | One a -> [a]
+                    | Many (head,tail) -> head::tail
 type ArithmeticVariableIdentifier = ArithmeticVariableIdentifier of string
 type StringVariableIdentifier = StringVariableIdentifier of string
 type AdditiveOp = Plus | Minus
@@ -36,16 +40,20 @@ and LogicalAndExpression = | And of LogicalAndExpression option * RelationalExpr
 and  RelationalExpression = 
     | Str of PrimaryStringRelationalExpression * RelationalOp * PrimaryStringRelationalExpression
     | Arith of PrimaryArithRelationalExpression * RelationalOp * PrimaryArithRelationalExpression
-and PrimaryStringRelationalExpression = StringVariableIdentifier | StringLiteral
-and PrimaryArithRelationalExpression = NumberLiteral | ArithmeticVariableIdentifier
+and PrimaryStringRelationalExpression = 
+    | PrimRelSVid of StringVariableIdentifier 
+    | PrimaryRelSLit of  StringLiteral
+and PrimaryArithRelationalExpression = 
+    | PrimaryRelALit of NumberLiteral 
+    | PrimeRelAVid of ArithmeticVariableIdentifier
 
 type AssignmentStatement = AssignmentExpression
 and AssignmentExpression = 
-    | ArithmeticExpression of ArithmeticVariableIdentifier * ArithmeticExpression
-    | StringExpression of StringVariableIdentifier * StringExpression
+    | ArithmeticAssign of ArithmeticVariableIdentifier * ArithmeticExpression
+    | StringAssign of StringVariableIdentifier * StringExpression
 
 type InputStatement = Read of Variable list
-and Variable = A of ArithmeticVariableIdentifier | S of StringVariableIdentifier
+and Variable = AVID of ArithmeticVariableIdentifier | SVID of StringVariableIdentifier
 type OutputStatement = Write of OutputLine 
 and OutputLine = Vars of Variable list | StringOutputLine of StringLiteral | Empty
 
