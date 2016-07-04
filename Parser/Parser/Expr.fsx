@@ -7,41 +7,47 @@ type OneOrMany<'a> = | One of 'a | Many of 'a * 'a list
 type ArithmeticVariableIdentifier = ArithmeticVariableIdentifier of string
 type StringVariableIdentifier = StringVariableIdentifier of string
 type AdditiveOp = Plus | Minus
+type AssignOp = AssignOp
 type MultiplicativeOp = Mul | Div
-type NumberLiteral = Float of float | Int of int
+type NumberLiteral = Single of float32 | Short of int16
 type RelationalOp = Eq | Ne | Gt | Lt
 type StringLiteral = StringLiteral of string
 type StringConcatOp = StringConcatOp  
 type ArithmeticExpression = 
-    | UnaryArithmeticExpression 
-    | AdditiveArithmeticExpression
+    | Unary of UnaryArithmeticExpression
+    | Add of AdditiveArithmeticExpression
 and UnaryArithmeticExpression = 
     AdditiveOp * PrimaryArithmeticExpression
 and AdditiveArithmeticExpression = 
-    | Additive of AdditiveArithmeticExpression * AdditiveOp * MultiplicativeArithmeticExpression
+    | AddOpExpr of AdditiveArithmeticExpression * AdditiveOp * MultiplicativeArithmeticExpression
     | Multiplicative of MultiplicativeArithmeticExpression
 and MultiplicativeArithmeticExpression =
-    | Multiplicative of MultiplicativeArithmeticExpression * MultiplicativeOp * PrimaryArithmeticExpression
+    | MulOpExpr of MultiplicativeArithmeticExpression * MultiplicativeOp * PrimaryArithmeticExpression
     | Primary of PrimaryArithmeticExpression
 and PrimaryArithmeticExpression = 
     | Var of ArithmeticVariableIdentifier
     | Expr of ArithmeticExpression
+    | Literal of NumberLiteral
 
 type StringExpression = 
-    | Primary of PrimaryStringExpression 
-    | Concat of StringExpression *  PrimaryStringExpression
+    | SPrimary of PrimaryStringExpression 
+    | ConcatExpr of StringExpression *  PrimaryStringExpression
 and PrimaryStringExpression =
     | SVar of StringVariableIdentifier 
-    | Literal of StringLiteral
+    | SLiteral of StringLiteral
 
 type ConditionalExpression = LogicalOrExpression
-and LogicalOrExpression = | Or of LogicalOrExpression option * LogicalAndExpression
-and LogicalAndExpression = | And of LogicalAndExpression option * RelationalExpression
+and LogicalOrExpression = 
+    | LogicalOr of LogicalOrExpression * LogicalAndExpression
+    | JustAnd of LogicalAndExpression
+and LogicalAndExpression = 
+    | LogicalAnd of LogicalAndExpression * RelationalExpression
+    | JustRelational of RelationalExpression
 and  RelationalExpression = 
     | Str of PrimaryStringRelationalExpression * RelationalOp * PrimaryStringRelationalExpression
     | Arith of PrimaryArithRelationalExpression * RelationalOp * PrimaryArithRelationalExpression
 and PrimaryStringRelationalExpression = 
-    | PrimRelSVid of StringVariableIdentifier 
+    | PrimaryRelSVid of StringVariableIdentifier 
     | PrimaryRelSLit of  StringLiteral
 and PrimaryArithRelationalExpression = 
     | PrimaryRelALit of NumberLiteral 

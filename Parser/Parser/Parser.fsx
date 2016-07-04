@@ -5,6 +5,8 @@ type Result<'a>  =
     | Success of 'a
     | Failure of string
 type Parser<'T> = Parser of (string -> Result<'T * string>)
+
+let untuple ((x,y),z) = x,y,z
 let retn x = (fun s -> Success(x, s))
              |> Parser
 let failParse err = (fun _ -> Failure(err))
@@ -13,20 +15,20 @@ let Zero = retn ()
 
 let run (Parser parser) input = 
     parser input
-let orElse (Parser p1) (Parser p2) = 
+let orElse p1 p2 = 
     fun str ->
-        match p1 str with
+        match run p1 str with
         | Success (value,left) ->  Success(value,left)
         | Failure (err) -> 
-            match p2 str with
+            match run p2 str with
             | Success (value, left) -> Success(value,left)
             | Failure _ -> Failure(err)
     |> Parser       
-let andAlso (Parser p1) (Parser p2) = 
+let andAlso p1 p2 = 
     fun str ->
-        match p1 str with
+        match run p1 str with
         | Success (value,_) ->  
-            match p2 str with
+            match run p2 str with
             | Success (value2, left) -> Success((value,value2),left)
             | Failure err -> Failure(err)
         | Failure (err) -> Failure(err)
@@ -64,6 +66,7 @@ let (>>=) p f = bind f p
 let (<!>) = map 
 let (<*>) = apply 
 let (|>>) p f = map f p
+let (|>>!) p f = map (fun _ -> f) p
 let (<|>) = orElse
 let (.&&.) = andAlso
 let (.&&) p1 p2 = p1 .&&. p2 |>> fst
@@ -93,6 +96,7 @@ let many1 p = parse {
 } 
 let opt p = (p |>> Some) <|> (retn None)    
 let between p1 p2 p3 = p1 >>. p2 .>> p3
+
 let sepBy1 p seperator = parse {
     let split = parse {
         let! _ = seperator
@@ -132,6 +136,7 @@ let pchar charToMatch = parse {
     else 
         return! failParse "Not same char"
 }
+let betweenC cbefore p cend = between (pchar cbefore) p (pchar cend)
 
 let rec sequence parsers = 
     let cons head tail = head::tail
@@ -177,13 +182,13 @@ let pBaseIdent =
     pLetter .>>. many pLetterOrDigit 
 let pArithmeticIdentifier = 
     pBaseIdent
-    |>> (List.Cons >> List.truncate 16 >> charListToStr >> ArithmeticVariableIdentifier >> AVID)
+    |>> (List.Cons >> List.truncate 16 >> charListToStr >> ArithmeticVariableIdentifier)
 let pStringIdentifier = 
     pBaseIdent 
     |>> (List.Cons >> List.truncate 15) .>>. pchar '$' 
     |>> (fun (list,nd) ->  
-        list @ [nd] |> charListToStr |>  StringVariableIdentifier |> SVID)
-let pVariableIdentifier = pArithmeticIdentifier <|> pStringIdentifier
+        list @ [nd] |> charListToStr |>  StringVariableIdentifier)
+let pVariableIdentifier = (pArithmeticIdentifier |>> AVID) <|> (pStringIdentifier |>> SVID)
 let pPLATYPUS = pstring "PLATYPUS"
 let pIF = pstring "IF"
 let pTHEN = pstring "THEN"
@@ -192,7 +197,7 @@ let pFOR = pstring "FOR"
 let pDO = pstring "DO"
 let pREAD = pstring "READ"
 let pWRITE = pstring "WRITE"
-let keyword = pPLATYPUS <|> pIF <|> pTHEN <|> pELSE <|> pFOR <|> pDO <|> pREAD <|> pWRITE
+let keyword = choice [pPLATYPUS;pIF;pTHEN;pELSE;pFOR;pDO;pREAD;pWRITE]
 let integerLiteral = parseAny |>> int16
 let strToHex hexStr = Convert.ToInt16(hexStr,16)
 let pHexDigit = anyOf (['0' ..'9'] @ ['A' .. 'F'])
@@ -202,52 +207,151 @@ let pDecimalInteger =
 let pHexIntegerLiteral = 
     pstring "0h" >>. many1 pHexDigit 
     |>> (OneOrMany<_>.toList >> charListToStr)
-let pIntegerLiteral = pDecimalInteger <|> pHexIntegerLiteral
+let pIntegerLiteral = (pDecimalInteger |>> Convert.ToInt16) <|> (pHexIntegerLiteral |>> strToHex) |>> NumberLiteral.Short
 let pPrefixFloat = pDecimalInteger .>>. pstring "." .>>. many pDigit
 let pPostfixFloat = retn "0" .>>. pstring "." .>>. (many1 pDigit |>> OneOrMany<_>.toList)
-let pFloatingPointLiteral = pPrefixFloat <|> pPostfixFloat |>> fun ((pre,dec),post) -> pre + dec + (charListToStr post)
+let pFloatingPointLiteral = pPrefixFloat <|> pPostfixFloat |>> fun ((pre,dec),post) -> (Convert.ToSingle(pre + dec + (charListToStr post))  |> NumberLiteral.Single)
 let pStringLiteral = 
     let quot = pchar '"'
     let pStringCharacter = notp quot &&. pInputCharacter
     between quot (many pStringCharacter) quot
-    |>> charListToStr
-let pSeparator = anyOf ['(';')';'{';'}';',';';';'"';'.';]
+    |>> (charListToStr >> StringLiteral)
+let pComma = pchar ','
 let pStatementSeparator = pchar ';'
-let pAssignmentOp = pstring "="
-let pLogicalOp = pstring "AND" <|> pstring "OR"
-let pRelationalOp = pstring ">" <|> pstring "<" <|> pstring "==" <|> pstring "!=" 
+let pAssignmentOp = pstring "=" |>>! AssignOp
+let pAnd = pstring "AND"
+let pOr = pstring "OR"
+let pRelationalOp = 
+    choice [
+        pstring ">" |>>! Gt;
+        pstring "<" |>>! Lt;
+        pstring "==" |>>! Eq;
+        pstring "!="  |>>! Ne]
+        
 let pStringConcatOp = pstring "<<"
-let pArithmeticOp = pstring "+" <|> pstring "-" <|> pstring "*" <|> pstring "/" 
+let pAdditiveOp = choice [pstring "+" |>>! Plus;
+                          pstring "-" |>>! Minus]
+let pMultiplicativeOp = choice [pstring "*" |>>! Mul;
+                                pstring "/" |>>! Div]
+
+let pBetweenParens p = betweenC '(' p ')'
+let pBetweenBrace p = betweenC '(' p ')'
 
 //Semantic
-let pSAssignExpression vid = parse { 
-    let! expr = pStringExpression 
-    return StringAssign(vid,expr)
-}
-let pAAssignExpression vid = parse { 
-    let! expr = pArithExpression 
-    return ArithmeticAssign(vid,expr)
-}            
-let pAssignmentStatement = parse {
+let pPrimaryStringExpression = 
+    (pStringIdentifier |>> SVar) <|> (pStringLiteral |>> SLiteral)
+let rec pStringExpression () = 
+    (pPrimaryStringExpression |>> SPrimary) <|> pConcatExpression
+and pConcatExpression = 
+    pStringExpression() .>> pStringConcatOp .>>. pPrimaryStringExpression |>> ConcatExpr
+
+
+let rec pPrimaryArithmeticExpression() = 
+    choice [pArithmeticIdentifier |>> Var;
+            pIntegerLiteral |>> Literal;
+            pFloatingPointLiteral |>> Literal
+            pBetweenParens (pArithExpression()) |>> Expr] 
+and pUnaryArithmeticExpression () = 
+  pAdditiveOp .>>. pPrimaryArithmeticExpression() 
+  |>> Unary
+and pArithExpression () = 
+    choice [pUnaryArithmeticExpression();
+            pAdditiveArithmeticExpression() |>> Add]
+and pMultiplactiveArithmeticExpression () =
+    choice [
+        pMultiplactiveArithmeticExpression () .>>. pMultiplicativeOp .>>. pPrimaryArithmeticExpression () |>> (untuple >> MulOpExpr)
+        pPrimaryArithmeticExpression() |>> Primary
+    ]
+and pAdditiveArithmeticExpression() = 
+    choice [pAdditiveArithmeticExpression () .>>. pAdditiveOp .>>. pMultiplactiveArithmeticExpression()  |>> (untuple >> AddOpExpr) ;
+            pMultiplactiveArithmeticExpression () |>> Multiplicative]        
+
+    
+        
+
+let pAssignmentExpression = parse {
     let! variable = pVariableIdentifier .>> pAssignmentOp 
-    let! expression = parse {
-        match variable with 
-        | SVID(vid) -> StringAssign(vid, parse {return! pSAssignExpression}) 
-        | AVID (vid) -> ArithmeticAssign (vid, parse { return pArithExpression})
-    }
-    let! statement = expression .>> pStatementSeparator
-    return Assign statement                  
+    return!  
+         match variable with 
+                | SVID(vid) -> parse {
+                    let! expr = pStringExpression() 
+                    return StringAssign(vid,expr)
+                    }
+                | AVID (vid) ->  parse {
+                    let! expr = pArithExpression() 
+                    return ArithmeticAssign(vid,expr)
+                }
 }
-let pSelectionStatement = 
-    pIF >>. pConditionalExpression .>> pTHEN .>>. many1 pStatement .>>. opt (pELSE >>. many1 pStatement)
-    |>> fun ((c,ifs),optElse) ->
-        match (ifs,optElse) with
+let pAssignmentStatement = 
+    pAssignmentExpression .>> pStatementSeparator
+    |>> fun statement -> Assign statement     
 
-        Select(c,)
-and pStatement = pAssignmentStatement <|> 
-                 pSelectionStatement <|>
-                 pIterStatement <|>
-                 pInputStatement <|> 
-                 pOutputStatement
 
-let pProgram = pPLATYPUS >>. many pStatement .>>. parseEOF |>> Platypus
+let optStatementSep = opt pStatementSeparator
+let optAssign = opt pAssignmentExpression  
+let pPrimaryArithmeticRelationalExpression = 
+    choice [
+        pArithmeticIdentifier |>> PrimeRelAVid;
+        pIntegerLiteral |>> PrimaryRelALit;
+        pFloatingPointLiteral |>> PrimaryRelALit
+    ] 
+let pPrimaryStringRelationalExpression = 
+    choice [
+        pStringIdentifier |>> PrimaryRelSVid
+        pStringLiteral |>> PrimaryRelSLit
+    ]
+let pRelationalExpression = 
+    choice [
+        pPrimaryArithmeticRelationalExpression .>>. pRelationalOp .>>. pPrimaryArithmeticRelationalExpression |>> (untuple >> Arith);
+        pPrimaryStringRelationalExpression .>>. pRelationalOp .>>. pPrimaryStringRelationalExpression |>> (untuple >> Str)]
+    
+let rec pLogicalAndExpression() = 
+        choice [pLogicalAndExpression() .>> pOr .>>. pRelationalExpression |>> LogicalAnd;
+                pRelationalExpression |>> JustRelational]
+let rec pLogicalOrExpression() = 
+        choice [pLogicalOrExpression() .>> pOr .>>. pLogicalAndExpression() |>> LogicalOr;
+                pLogicalAndExpression() |>> JustAnd]
+
+
+let pConditionalExpression = pLogicalOrExpression()
+
+
+let pVariableList = many pVariableIdentifier
+let pInputStatement = 
+    pREAD >>. (pBetweenParens pVariableList) .>> pStatementSeparator
+    |>> (Read >> Input)
+let pOutputLine = 
+    fun str -> 
+        match run pVariableList str, run pStringLiteral str with
+        | Success (vars,remaining), _ -> Success(Vars vars,remaining)
+        | _, Success (strLiterals,remaining) -> Success(StringOutputLine strLiterals,remaining)
+        | _,_ -> Success(Empty,str)
+    |> Parser
+let pOutputStatement = 
+    pREAD >>. (pBetweenParens pOutputLine) .>> pStatementSeparator
+    |>> (Write >> Output)
+let rec pStatement () = 
+    choice [pAssignmentStatement;pSelectionStatement;pIterStatement;pInputStatement;pOutputStatement]
+and oneOrMoreStatements = many1 (pStatement())
+and optStatements = many (pStatement())
+and pSelectionStatement = 
+    pIF >>. (pBetweenParens pConditionalExpression) .>> pTHEN .>>. 
+    (pBetweenBrace oneOrMoreStatements) .>>. 
+    opt (
+        pELSE >>. 
+        (pBetweenBrace oneOrMoreStatements)
+    ) .>> optStatementSep
+    |>> fun ((c,ifStatements),optElse) ->
+        Select(c,ifStatements,optElse)
+and pIterStatement = 
+    pFOR >>. pBetweenParens (optAssign.>> pComma .>>. pConditionalExpression .>> pComma .>>. optAssign) .>>
+    pDO .>>. (pBetweenBrace optStatements) .>> optStatementSep 
+    |>> fun (((assOp,cond),assOp2),statements) ->
+        Iter(assOp,cond,assOp2,statements)
+
+let pProgram = pPLATYPUS >>. optStatements .>>. parseEOF |>> Platypus
+
+let buffer file = System.IO.File.ReadAllText file
+let getFile f = IO.Path.Combine (__SOURCE_DIRECTORY__, "..\\", f)
+
+"a2Hello.pls" |> getFile |> buffer |> run pProgram
