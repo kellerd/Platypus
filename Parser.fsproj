@@ -52,8 +52,9 @@
   <ItemGroup />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <None Include="Expr.fsx" />
     <None Include="Parser.fsx" />
+    <None Include="Language.fsx" />
+    <None Include="Platypus.fsx" />
     <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
