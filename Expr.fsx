@@ -13,6 +13,7 @@ type NumberLiteral = Single of float32 | Short of int16
 type RelationalOp = Eq | Ne | Gt | Lt
 type StringLiteral = StringLiteral of string
 type StringConcatOp = StringConcatOp  
+type LogicalOp = And | Or
 type ArithmeticExpression = 
     | Unary of UnaryArithmeticExpression
     | Add of AdditiveArithmeticExpression
@@ -36,13 +37,8 @@ and PrimaryStringExpression =
     | SVar of StringVariableIdentifier 
     | SLiteral of StringLiteral
 
-type ConditionalExpression = LogicalOrExpression
-and LogicalOrExpression = 
-    | LogicalOr of LogicalOrExpression * LogicalAndExpression
-    | JustAnd of LogicalAndExpression
-and LogicalAndExpression = 
-    | LogicalAnd of LogicalAndExpression * RelationalExpression
-    | JustRelational of RelationalExpression
+type ConditionalExpression = | RelationalOnly of RelationalExpression 
+                             | Logical of LogicalOp * ConditionalExpression 
 and  RelationalExpression = 
     | Str of PrimaryStringRelationalExpression * RelationalOp * PrimaryStringRelationalExpression
     | Arith of PrimaryArithRelationalExpression * RelationalOp * PrimaryArithRelationalExpression
