@@ -219,8 +219,8 @@ let pStringLiteral =
 let pComma = pchar ','
 let pStatementSeparator = pchar ';'
 let pAssignmentOp = pstring "=" |>>! AssignOp
-let pAnd = pstring "AND"
-let pOr = pstring "OR"
+let pAnd = pstring "AND" |>>! And
+let pOr = pstring "OR" |>>! Or
 let pRelationalOp = 
     choice [
         pstring ">" |>>! Gt;
@@ -301,7 +301,6 @@ let pRelationalExpression =
     choice [
         pArith |>> (untuple >> Arith);
         pString |>> (untuple >> Str)]
-
 // let rec logicalAndExprPrime prime = 
 //     opt (pAnd >>. pRelationalExpression .>>. (logicalAndExprPrime prime))
 //     |>> prime
@@ -315,8 +314,8 @@ let pRelationalExpression =
 //     pLogicalAndExpression .>>. (pLogicalOrExprPrime LogicOr)
 //     |>> LogicalOrExpression
 
-
-// let pConditionalExpression = pLogicalOrExpression
+let pLogicalOp = pAnd <|> pOr
+let pConditionalExpression = pRelationalExpression .>>. many (pLogicalOp .>>. pRelationalExpression)
 
 let pVariableList = many pVariableIdentifier
 let pInputStatement = 
