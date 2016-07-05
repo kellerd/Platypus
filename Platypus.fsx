@@ -223,32 +223,31 @@ let pOutputStatement =
     pWRITE >>. (pBetweenParens pOutputLine) .>> pStatementSeparator
     |>> (Write >> Output)
 
-let rec pStatement () = 
+let rec pStatement a = 
+    (notp parseEOF) >>= (fun _ ->
     choice [pAssignmentStatement;
-    //pSelectionStatement;
-    //pIterStatement;
-    pInputStatement;pOutputStatement]
-and oneOrMoreStatements = many1 (pStatement())
-and optStatements = many (pStatement())
-// and pSelectionStatement = 
-//     pIF >>. pBetweenParens pConditionalExpression .>> pTHEN .>>. 
-//     (pBetweenBrace oneOrMoreStatements) .>>. 
-//     opt (
-//         pELSE >>. 
-//         (pBetweenBrace oneOrMoreStatements)
-//     ) .>> optStatementSep
-//     |>> fun ((c,ifStatements),optElse) ->
-//         Select(c,ifStatements,optElse)
-// and pIterStatement = 
-//     pFOR >>. pBetweenParens (optAssign.>> pComma .>>. pConditionalExpression .>> pComma .>>. optAssign) .>>
-//     pDO .>>. (pBetweenBrace optStatements) .>> optStatementSep 
-//     |>> fun (((assOp,cond),assOp2),statements) ->
-//         Iter(assOp,cond,assOp2,statements)
+    pSelectionStatement a;
+    pIterStatement a;
+    pInputStatement;pOutputStatement])
+and pSelectionStatement a = 
+    pIF >>. pBetweenParens pConditionalExpression .>> pTHEN .>>. 
+    (pStatement a |> many1 |> pBetweenBrace ) .>>. 
+    opt (
+        pELSE >>. 
+        (pStatement a |> many1 |> pBetweenBrace )
+    ) .>> optStatementSep
+    |>> fun ((c,ifStatements),optElse) ->
+        Select(c,ifStatements,optElse)
+and pIterStatement a = 
+    pFOR >>. pBetweenParens (optAssign.>> pComma .>>. pConditionalExpression .>> pComma .>>. optAssign) .>>
+    pDO .>>. (pStatement a |> many |>  pBetweenBrace) .>> optStatementSep 
+    |>> fun (((assOp,cond),assOp2),statements) ->
+        Iter(assOp,cond,assOp2,statements)
 
-let pProgram = pPLATYPUS >>. pBetweenBrace optStatements .>>. parseEOF |>> Platypus 
+let pProgram = pPLATYPUS >>. (pStatement () |> many |>  pBetweenBrace) .>>. parseEOF |>> Platypus 
 
 // let buffer file = System.IO.File.ReadAllText file
 // let getFile f = IO.Path.Combine (__SOURCE_DIRECTORY__, "Sample Code\\", f)
 
-run pProgram "PLATYPUS{WRITE(\"abcd\");}"
+run pProgram "PLATYPUS{FOR(,\"abcd\"==\"abcd\",)DO{};}"
 run pProgram "PLATYPUS{WRITE(\"a\");}"
