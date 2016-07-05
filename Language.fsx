@@ -37,10 +37,18 @@ and PrimaryStringExpression =
     | SVar of StringVariableIdentifier 
     | SLiteral of StringLiteral
 
-type ConditionalExpression = RelationalExpression * (LogicalOp * RelationalExpression) list 
-and  RelationalExpression = 
+type LogicalExpression = RelationalExpression * (LogicalOp * RelationalExpression) list 
+and ConditionalExpression = LogicalOrExpression
+and LogicalOrExpression = 
+    | LogicalOr of LogicalOrExpression * LogicalAndExpression
+    | JustAnd of LogicalAndExpression
+and LogicalAndExpression = 
+    | LogicalAnd of LogicalAndExpression * RelationalExpression
+    | JustRelational of RelationalExpression
+and RelationalExpression = 
     | Str of PrimaryStringRelationalExpression * RelationalOp * PrimaryStringRelationalExpression
     | Arith of PrimaryArithRelationalExpression * RelationalOp * PrimaryArithRelationalExpression
+    | LExpr of LogicalOrExpression
 and PrimaryStringRelationalExpression = 
     | PrimaryRelSVid of StringVariableIdentifier 
     | PrimaryRelSLit of  StringLiteral

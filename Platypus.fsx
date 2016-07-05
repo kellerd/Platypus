@@ -190,11 +190,26 @@ let pString = pPrimaryStringRelationalExpression .>>. pRelationalOp .>>. pPrimar
 let pRelationalExpression = 
     choice [
         pArith |>> (untuple >> Arith);
-        pString |>> (untuple >> Str)]
-        
-let pLogicalOp = pAnd <|> pOr
-let pConditionalExpression = pRelationalExpression .>>. many (pLogicalOp .>>. pRelationalExpression)
+        pString |>> (untuple >> Str)] |>> JustRelational
 
+let pLogicalOp = pAnd <|> pOr
+let pConditionalExpression = 
+    pRelationalExpression .>>. many (pLogicalOp .>>. pRelationalExpression)
+    |>> fun input ->
+            //After matching higher order, recurse
+            let rec mapConditional = function 
+                | rl, [] -> rl |> JustAnd 
+                | baseRl, (Or,rl1)::(And,JustRelational(rl2))::tail -> 
+                    (baseRl,(Or,LogicalAnd(rl1,rl2))::tail) |> mapConditional
+                | baseRl, (Or,rl1)::(And,a)::tail -> 
+                    (baseRl,(Or,LogicalAnd(rl1,LExpr(JustAnd(a))))::tail) |> mapConditional 
+                | baseRl, (Or,rl1)::tail -> 
+                    (JustRelational(LExpr(LogicalOr(JustAnd(baseRl),rl1))),tail) |> mapConditional
+                | baseRl, (And,JustRelational(rl2))::tail -> 
+                    (LogicalAnd(baseRl,rl2),tail) |> mapConditional
+                | baseRl, (And,a)::tail -> 
+                    (LogicalAnd(baseRl,LExpr(JustAnd(a))),tail) |> mapConditional
+            mapConditional input
 let pVariableList = sepBy1 pVariableIdentifier pComma
 let pInputStatement = 
     pREAD >>. (pBetweenParens pVariableList) .>> pStatementSeparator
@@ -237,5 +252,5 @@ let pProgram = pPLATYPUS >>. (pStatement () |> many |>  pBetweenBrace) .>>. pars
 // let buffer file = System.IO.File.ReadAllText file
 // let getFile f = IO.Path.Combine (__SOURCE_DIRECTORY__, "Sample Code\\", f)
 
-run pProgram "PLATYPUS{FOR(,\"abcd\"==\"abcd\"OR\"abcd\"==\"abcd\"AND\"abcd\"==\"abcd\",)DO{};}"
+run pProgram "PLATYPUS{IF(\"1\"==\"2\"OR\"3\"==\"4\"AND\"5\"==\"6\")THEN{WRITE(\"a\");};}"
 run pProgram "PLATYPUS{WRITE(\"a\");}"
