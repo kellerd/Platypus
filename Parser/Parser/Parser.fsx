@@ -235,15 +235,12 @@ let pMultiplicativeOp = choice [pstring "*" |>>! Mul;
                                 pstring "/" |>>! Div]
 
 let pBetweenParens p = betweenC '(' p ')'
-let pBetweenBrace p = betweenC '(' p ')'
+let pBetweenBrace p = betweenC '{' p '}'
 
 //Semantic
-let pPrimaryStringExpression = 
-    (pStringIdentifier |>> SVar) <|> (pStringLiteral |>> SLiteral)
-let rec pStringExpression () = 
-    (pPrimaryStringExpression |>> SPrimary) <|> pConcatExpression
-and pConcatExpression = 
-    pStringExpression() .>> pStringConcatOp .>>. pPrimaryStringExpression |>> ConcatExpr
+let pPrimaryStringExpression = (pStringIdentifier |>> SVar) <|> (pStringLiteral |>> SLiteral)
+let rec pStringExpression () = (pPrimaryStringExpression |>> SPrimary) <|> pConcatExpression
+and pConcatExpression = pStringExpression() .>> pStringConcatOp .>>. pPrimaryStringExpression |>> ConcatExpr
 
 
 let rec pPrimaryArithmeticExpression() = 
@@ -251,9 +248,7 @@ let rec pPrimaryArithmeticExpression() =
             pIntegerLiteral |>> Literal;
             pFloatingPointLiteral |>> Literal
             pBetweenParens (pArithExpression()) |>> Expr] 
-and pUnaryArithmeticExpression () = 
-  pAdditiveOp .>>. pPrimaryArithmeticExpression() 
-  |>> Unary
+and pUnaryArithmeticExpression () =  pAdditiveOp .>>. pPrimaryArithmeticExpression()  |>> Unary
 and pArithExpression () = 
     choice [pUnaryArithmeticExpression();
             pAdditiveArithmeticExpression() |>> Add]
@@ -300,21 +295,28 @@ let pPrimaryStringRelationalExpression =
         pStringIdentifier |>> PrimaryRelSVid
         pStringLiteral |>> PrimaryRelSLit
     ]
+let pArith = pPrimaryArithmeticRelationalExpression .>>. pRelationalOp .>>. pPrimaryArithmeticRelationalExpression
+let pString = pPrimaryStringRelationalExpression .>>. pRelationalOp .>>. pPrimaryStringRelationalExpression 
 let pRelationalExpression = 
     choice [
-        pPrimaryArithmeticRelationalExpression .>>. pRelationalOp .>>. pPrimaryArithmeticRelationalExpression |>> (untuple >> Arith);
-        pPrimaryStringRelationalExpression .>>. pRelationalOp .>>. pPrimaryStringRelationalExpression |>> (untuple >> Str)]
-    
-let rec pLogicalAndExpression() = 
-        choice [pLogicalAndExpression() .>> pOr .>>. pRelationalExpression |>> LogicalAnd;
-                pRelationalExpression |>> JustRelational]
-let rec pLogicalOrExpression() = 
-        choice [pLogicalOrExpression() .>> pOr .>>. pLogicalAndExpression() |>> LogicalOr;
-                pLogicalAndExpression() |>> JustAnd]
+        pArith |>> (untuple >> Arith);
+        pString |>> (untuple >> Str)]
+
+// let rec logicalAndExprPrime prime = 
+//     opt (pAnd >>. pRelationalExpression .>>. (logicalAndExprPrime prime))
+//     |>> prime
+// let pLogicalAndExpression = 
+//     pRelationalExpression .>>. (logicalAndExprPrime LogicAnd)
+//     |>> LogicalAndExpression
+// let rec pLogicalOrExprPrime prime= 
+//     opt (pOr >>. pLogicalAndExpression .>>. (pLogicalOrExprPrime prime))
+//     |>> prime
+// let pLogicalOrExpression = 
+//     pLogicalAndExpression .>>. (pLogicalOrExprPrime LogicOr)
+//     |>> LogicalOrExpression
 
 
-let pConditionalExpression = pLogicalOrExpression()
-
+// let pConditionalExpression = pLogicalOrExpression
 
 let pVariableList = many pVariableIdentifier
 let pInputStatement = 
@@ -331,27 +333,32 @@ let pOutputStatement =
     pREAD >>. (pBetweenParens pOutputLine) .>> pStatementSeparator
     |>> (Write >> Output)
 let rec pStatement () = 
-    choice [pAssignmentStatement;pSelectionStatement;pIterStatement;pInputStatement;pOutputStatement]
+    choice [pAssignmentStatement;
+    //pSelectionStatement;
+    //pIterStatement;
+    pInputStatement;pOutputStatement]
 and oneOrMoreStatements = many1 (pStatement())
 and optStatements = many (pStatement())
-and pSelectionStatement = 
-    pIF >>. (pBetweenParens pConditionalExpression) .>> pTHEN .>>. 
-    (pBetweenBrace oneOrMoreStatements) .>>. 
-    opt (
-        pELSE >>. 
-        (pBetweenBrace oneOrMoreStatements)
-    ) .>> optStatementSep
-    |>> fun ((c,ifStatements),optElse) ->
-        Select(c,ifStatements,optElse)
-and pIterStatement = 
-    pFOR >>. pBetweenParens (optAssign.>> pComma .>>. pConditionalExpression .>> pComma .>>. optAssign) .>>
-    pDO .>>. (pBetweenBrace optStatements) .>> optStatementSep 
-    |>> fun (((assOp,cond),assOp2),statements) ->
-        Iter(assOp,cond,assOp2,statements)
+// and pSelectionStatement = 
+//     pIF >>. pBetweenParens pConditionalExpression .>> pTHEN .>>. 
+//     (pBetweenBrace oneOrMoreStatements) .>>. 
+//     opt (
+//         pELSE >>. 
+//         (pBetweenBrace oneOrMoreStatements)
+//     ) .>> optStatementSep
+//     |>> fun ((c,ifStatements),optElse) ->
+//         Select(c,ifStatements,optElse)
+// and pIterStatement = 
+//     pFOR >>. pBetweenParens (optAssign.>> pComma .>>. pConditionalExpression .>> pComma .>>. optAssign) .>>
+//     pDO .>>. (pBetweenBrace optStatements) .>> optStatementSep 
+//     |>> fun (((assOp,cond),assOp2),statements) ->
+//         Iter(assOp,cond,assOp2,statements)
 
-let pProgram = pPLATYPUS >>. optStatements .>>. parseEOF |>> Platypus
+let pProgram = pPLATYPUS >>. pBetweenBrace optStatements .>>. parseEOF |>> Platypus 
 
 let buffer file = System.IO.File.ReadAllText file
 let getFile f = IO.Path.Combine (__SOURCE_DIRECTORY__, "..\\", f)
 
-"a2Hello.pls" |> getFile |> buffer |> run pProgram
+"a4unary.pls" |> getFile |> buffer |> run pProgram
+
+run pProgram "PLATYPUS{}"

@@ -38,11 +38,13 @@ and PrimaryStringExpression =
 
 type ConditionalExpression = LogicalOrExpression
 and LogicalOrExpression = 
-    | LogicalOr of LogicalOrExpression * LogicalAndExpression
-    | JustAnd of LogicalAndExpression
-and LogicalAndExpression = 
-    | LogicalAnd of LogicalAndExpression * RelationalExpression
-    | JustRelational of RelationalExpression
+    | LogicalOrExpression of LogicalAndExpression * LogicalOrExpressionPrime
+and LogicalAndExpression =
+    |  LogicalAndExpression of  RelationalExpression * LogicalAndExpressionPrime
+and LogicalOrExpressionPrime =
+    | LogicOr of (LogicalAndExpression * LogicalOrExpressionPrime) option
+and LogicalAndExpressionPrime =
+    | LogicAnd of (RelationalExpression * LogicalAndExpressionPrime) option
 and  RelationalExpression = 
     | Str of PrimaryStringRelationalExpression * RelationalOp * PrimaryStringRelationalExpression
     | Arith of PrimaryArithRelationalExpression * RelationalOp * PrimaryArithRelationalExpression
