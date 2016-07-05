@@ -89,20 +89,6 @@ let many p = parseZeroOrMore p >> Success |> Parser
 let opt p = (p |>> Some) <|> (retn None)    
 let between p1 p2 p3 = p1 >>. p2 .>> p3
 
-let sepBy1 p seperator = parse {
-    let split = parse {
-        let! _ = seperator
-        let! cap = p
-        return cap
-    }
-    let! first = p
-    let! rest = many split
-    return first::rest
-}
-
-let sepBy p seperator =
-    sepBy1 p seperator <|> retn []
-
 let choice listOfParsers = 
         List.reduce ( <|> ) listOfParsers 
 

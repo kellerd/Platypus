@@ -4,6 +4,10 @@ type OneOrMany<'a> = | One of 'a | Many of 'a * 'a list
                     match oneOrMany with
                     | One a -> [a]
                     | Many (head,tail) -> head::tail
+      static member ofList head tail =
+        match tail with 
+        | [] -> One(head)
+        | xs -> Many(head,tail)
 type ArithmeticVariableIdentifier = ArithmeticVariableIdentifier of string
 type StringVariableIdentifier = StringVariableIdentifier of string
 type AdditiveOp = Plus | Minus
@@ -31,9 +35,6 @@ and PrimaryArithmeticExpression =
     | Literal of NumberLiteral
 
 type StringExpression = 
-    | SPrimary of PrimaryStringExpression 
-    | ConcatExpr of StringExpression *  PrimaryStringExpression
-and PrimaryStringExpression =
     | SVar of StringVariableIdentifier 
     | SLiteral of StringLiteral
 
@@ -59,12 +60,12 @@ and PrimaryArithRelationalExpression =
 type AssignmentStatement = AssignmentExpression
 and AssignmentExpression = 
     | ArithmeticAssign of ArithmeticVariableIdentifier * ArithmeticExpression
-    | StringAssign of StringVariableIdentifier * StringExpression
+    | StringAssign of StringVariableIdentifier * StringExpression OneOrMany
 
-type InputStatement = Read of Variable list
+type InputStatement = Read of Variable OneOrMany
 and Variable = AVID of ArithmeticVariableIdentifier | SVID of StringVariableIdentifier
 type OutputStatement = Write of OutputLine 
-and OutputLine = Vars of Variable list | StringOutputLine of StringLiteral | Empty
+and OutputLine = Vars of Variable OneOrMany | StringOutputLine of StringLiteral | Empty
 
 type IterationStatement = AssignmentExpression option * ConditionalExpression * AssignmentExpression option * Statement list
 and SelectionStatement = ConditionalExpression * Statement OneOrMany * Else option
