@@ -191,19 +191,7 @@ let pRelationalExpression =
     choice [
         pArith |>> (untuple >> Arith);
         pString |>> (untuple >> Str)]
-// let rec logicalAndExprPrime prime = 
-//     opt (pAnd >>. pRelationalExpression .>>. (logicalAndExprPrime prime))
-//     |>> prime
-// let pLogicalAndExpression = 
-//     pRelationalExpression .>>. (logicalAndExprPrime LogicAnd)
-//     |>> LogicalAndExpression
-// let rec pLogicalOrExprPrime prime= 
-//     opt (pOr >>. pLogicalAndExpression .>>. (pLogicalOrExprPrime prime))
-//     |>> prime
-// let pLogicalOrExpression = 
-//     pLogicalAndExpression .>>. (pLogicalOrExprPrime LogicOr)
-//     |>> LogicalOrExpression
-
+        
 let pLogicalOp = pAnd <|> pOr
 let pConditionalExpression = pRelationalExpression .>>. many (pLogicalOp .>>. pRelationalExpression)
 
@@ -249,5 +237,5 @@ let pProgram = pPLATYPUS >>. (pStatement () |> many |>  pBetweenBrace) .>>. pars
 // let buffer file = System.IO.File.ReadAllText file
 // let getFile f = IO.Path.Combine (__SOURCE_DIRECTORY__, "Sample Code\\", f)
 
-run pProgram "PLATYPUS{FOR(,\"abcd\"==\"abcd\",)DO{};}"
+run pProgram "PLATYPUS{FOR(,\"abcd\"==\"abcd\"OR\"abcd\"==\"abcd\"AND\"abcd\"==\"abcd\",)DO{};}"
 run pProgram "PLATYPUS{WRITE(\"a\");}"
