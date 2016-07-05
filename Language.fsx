@@ -37,8 +37,7 @@ and PrimaryStringExpression =
     | SVar of StringVariableIdentifier 
     | SLiteral of StringLiteral
 
-type ConditionalExpression = | RelationalOnly of RelationalExpression 
-                             | Logical of LogicalOp * ConditionalExpression 
+type ConditionalExpression = RelationalExpression * (LogicalOp * RelationalExpression) list 
 and  RelationalExpression = 
     | Str of PrimaryStringRelationalExpression * RelationalOp * PrimaryStringRelationalExpression
     | Arith of PrimaryArithRelationalExpression * RelationalOp * PrimaryArithRelationalExpression
