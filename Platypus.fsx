@@ -37,7 +37,6 @@ let parseAny =
 let pchar charToMatch = parse {
     let! c = parseAny
     if c = charToMatch then 
-        printfn "Matched %c" c
         return c 
     else 
         return! failParse "Not same char"
