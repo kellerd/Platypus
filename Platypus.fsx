@@ -37,6 +37,7 @@ let parseAny =
 let pchar charToMatch = parse {
     let! c = parseAny
     if c = charToMatch then 
+        printfn "Matched %c" c
         return c 
     else 
         return! failParse "Not same char"
@@ -157,7 +158,7 @@ and pAdditiveArithmeticExpression a =
     |>> fun (primary,additive) ->
         let rec MakeAdditive = function
             | (mul,[]) -> Multiplicative primary
-            | (mul,(op,mul2)::tail) -> (MakeAdditive(mul2,tail),op,mul) |> AddOpExpr
+            | (mul,(op,mul2)::tail) -> (MakeAdditive(mul,tail),op,mul2) |> AddOpExpr
         MakeAdditive (primary,additive)
 and pAdditiveArithmeticExpression' a = 
     pAdditiveOp .>>. (pMultiplicativeArithmeticExpression a) 
@@ -166,7 +167,7 @@ and pMultiplicativeArithmeticExpression a =
     |>> fun (primary,multiplicative) ->
         let rec MakeMultiplicative = function
             | (primary,[]) -> Primary primary
-            | (primary,(op,primary2)::tail) -> (MakeMultiplicative(primary2,tail),op,primary) |> MulOpExpr
+            | (primary,(op,primary2)::tail) -> (MakeMultiplicative(primary,tail),op,primary2) |> MulOpExpr
         MakeMultiplicative (primary,multiplicative)
 and pMultiplicativeArithmeticExpression' a = 
     pMultiplicativeOp .>>. (pPrimaryArithmeticExpression a) 
@@ -180,7 +181,7 @@ run (pArithExpression () ) "-a"
 run (pArithExpression () ) "+5.0"
 run (pArithExpression () ) "0hF"
 run (pArithExpression () ) "-(a-5.0)"
-run (pArithExpression () ) "1/3+2+6+5+3"
+run (pArithExpression () ) "1/3+7+(3*10)"
 // and pArithExpression a = 
 //     choice [pUnaryArithmeticExpression a;
 //             pAdditiveArithmeticExpression a |>> Add]
