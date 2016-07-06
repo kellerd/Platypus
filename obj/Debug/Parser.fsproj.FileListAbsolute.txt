@@ -1,2 +1,0 @@
-c:\Users\KELLERD\Documents\GitHub\Platypus\Parser\Parser\obj\Debug\Parser.fsprojResolveAssemblyReference.cache
-c:\Users\KELLERD\Documents\GitHub\Platypus\obj\Debug\Parser.fsprojResolveAssemblyReference.cache

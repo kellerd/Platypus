@@ -145,21 +145,48 @@ let pBetweenBrace p = betweenC '{' p '}'
 let pPrimaryStringExpression = (pStringIdentifier |>> SVar) <|> (pStringLiteral |>> SLiteral)
 let pStringExpression = sepBy1 pPrimaryStringExpression pStringConcatOp
 
-let rec pPrimaryArithmeticExpression a = 
-    choice [pArithmeticIdentifier |>> Var;
-            pIntegerLiteral |>> Literal;
-            pFloatingPointLiteral |>> Literal
-            pBetweenParens (pArithExpression a) |>> Expr] 
-and pArithExpression a = 
-    (notp parseEOF) >>= fun _ -> (choice [pUnaryArithmeticExpression a;])
-and pUnaryArithmeticExpression a =  pAdditiveOp .>>. (pPrimaryArithmeticExpression a)  |>> Unary
-
+let rec pArithExpression a = 
+    (notp parseEOF) >>= (fun _ -> 
+        choice [
+            pAdditiveArithmeticExpression a |>> Add
+            pUnaryArithmeticExpression a;])
+and pUnaryArithmeticExpression a=  
+    pAdditiveOp .>>. (pPrimaryArithmeticExpression a)  |>> Unary
+and pAdditiveArithmeticExpression a = 
+    (pMultiplicativeArithmeticExpression a) .>>. many (pAdditiveArithmeticExpression' a)
+    |>> fun (primary,additive) ->
+        let rec MakeAdditive = function
+            | (mul,[]) -> Multiplicative primary
+            | (mul,(op,mul2)::tail) -> (MakeAdditive(mul2,tail),op,mul) |> AddOpExpr
+        MakeAdditive (primary,additive)
+and pAdditiveArithmeticExpression' a = 
+    pAdditiveOp .>>. (pMultiplicativeArithmeticExpression a) 
+and pMultiplicativeArithmeticExpression a = 
+    (pPrimaryArithmeticExpression a) .>>. many (pMultiplicativeArithmeticExpression' a) 
+    |>> fun (primary,multiplicative) ->
+        let rec MakeMultiplicative = function
+            | (primary,[]) -> Primary primary
+            | (primary,(op,primary2)::tail) -> (MakeMultiplicative(primary2,tail),op,primary) |> MulOpExpr
+        MakeMultiplicative (primary,multiplicative)
+and pMultiplicativeArithmeticExpression' a = 
+    pMultiplicativeOp .>>. (pPrimaryArithmeticExpression a) 
+and pPrimaryArithmeticExpression a = 
+            choice [pArithmeticIdentifier |>> Var;
+                pFloatingPointLiteral |>> Literal;
+                pHexIntegerLiteral |>> (strToHex >> Short >> Literal);
+                pIntegerLiteral |>> Literal;
+                pBetweenParens (pArithExpression a) |>> Expr]
+run (pArithExpression () ) "-a"
+run (pArithExpression () ) "+5.0"
+run (pArithExpression () ) "0hF"
 run (pArithExpression () ) "-(a-5.0)"
+run (pArithExpression () ) "1/3+2+6+5+3"
 // and pArithExpression a = 
 //     choice [pUnaryArithmeticExpression a;
 //             pAdditiveArithmeticExpression a |>> Add]
 
      
+
 
 let pAssignmentExpression = parse {
     let! variable = (pStringIdentifier .>> pAssignmentOp |>> SVID) <|> (pArithmeticIdentifier .>> pAssignmentOp |>> AVID)
