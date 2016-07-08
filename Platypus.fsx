@@ -34,13 +34,13 @@ let parseAny =
         | _ -> Success (str.[0], str.[1..])
     |> Parser
 
-let pchar charToMatch = parse {
-    let! c = parseAny
-    if c = charToMatch then 
-        return c 
-    else 
-        return! failParse (sprintf "Not same char : %c" charToMatch) 
-}
+let pchar charToMatch =
+    fun str ->
+        match run parseAny str with
+        | Success (c,rest) when c = charToMatch -> Success(c,rest)
+        | Success(c,rest) -> Failure (sprintf "Not same char. Wanted: %c, Got: %c: rest is: %s" charToMatch c rest)
+        | Failure(err) -> Failure(err)
+    |> Parser
 
 let parseEOF = 
     fun str -> 
@@ -107,16 +107,17 @@ let strToHex hexStr = Convert.ToInt16(hexStr,16)
 let pHexDigit = anyOf (['0' ..'9'] @ ['A' .. 'F'])
 let pNonZeroDigit = anyOf ['1' .. '9']
 let pDecimalInteger = 
-    pstring "0" <|> (pNonZeroDigit .>>. many pDigit |>> (List.Cons >> charListToStr)) 
+   (pNonZeroDigit .>>. many pDigit |>> (List.Cons >> charListToStr)) <|> pstring "0" 
 let pHexIntegerLiteral = 
     pstring "0h" >>. many1 pHexDigit 
     |>> (OneOrMany<_>.toList >> charListToStr)
-let pIntegerLiteral = (pDecimalInteger |>> Convert.ToInt16) <|> (pHexIntegerLiteral |>> strToHex) |>> NumberLiteral.Short
+let pIntegerLiteral = (pHexIntegerLiteral |>> strToHex)  <|> (pDecimalInteger |>> Convert.ToInt16)  |>> NumberLiteral.Short
 let pPrefixFloat = pDecimalInteger .>>. pstring "." .>>. many pDigit
 let pPostfixFloat = retn "0" .>>. pstring "." .>>. (many1 pDigit |>> OneOrMany<_>.toList)
 let pFloatingPointLiteral = 
     pPrefixFloat <|> pPostfixFloat 
     |>> fun ((pre,dec),post) -> (Convert.ToSingle(pre + dec + (charListToStr post))  |> NumberLiteral.Single)
+
 
 let pStringLiteral = 
     let quot = pchar '"'
@@ -177,7 +178,6 @@ and pMultiplicativeArithmeticExpression' a =
 and pPrimaryArithmeticExpression a = 
             pIgnore >>. choice [pArithmeticIdentifier |>> Var;
                 pFloatingPointLiteral |>> Literal;
-                pHexIntegerLiteral |>> (strToHex >> Short >> Literal);
                 pIntegerLiteral |>> Literal;
                 pBetweenParens (pArithExpression a) |>> Expr]    .>> pIgnore
 
@@ -200,14 +200,13 @@ let pAssignmentStatement =
     pIgnore >>. pAssignmentExpression .>-> pStatementSeparator .>> pIgnore
     |>> fun statement -> Assign statement     
     )
-    
 let optStatementSep = opt pStatementSeparator
 let optAssign = opt pAssignmentExpression  
 let pPrimaryArithmeticRelationalExpression = 
     pIgnore >>. choice [
         pArithmeticIdentifier |>> PrimeRelAVid;
-        pIntegerLiteral |>> PrimaryRelALit;
         pFloatingPointLiteral |>> PrimaryRelALit
+        pIntegerLiteral |>> PrimaryRelALit;
     ]  .>> pIgnore
 let pPrimaryStringRelationalExpression = 
     pIgnore >>. choice [
@@ -279,10 +278,22 @@ let pStatement =
         |>> fun (((assOp,cond),assOp2),statements) ->
             Iter(assOp,cond,assOp2,statements)
     pStatement()
-let pProgram = pPLATYPUS >->. (pStatement |> many |>  pBetweenBrace) .>->. parseEOF |>> Platypus 
 
-// let buffer file = System.IO.File.ReadAllText file
-// let getFile f = IO.Path.Combine (__SOURCE_DIRECTORY__, "Sample Code\\", f)
+
+let pProgram = pIgnore >>. pPLATYPUS >->. (pStatement |> many |>  pBetweenBrace) .>->. parseEOF |>> Platypus 
+
+let buffer file = System.IO.File.ReadAllText file
+let getFiles = (IO.Path.Combine (__SOURCE_DIRECTORY__, "Sample Code\\Bonus3\\"),"*.pls") |> IO.Directory.EnumerateFiles
+let runProgs = getFiles |> Seq.map (fun f -> f,(f |> buffer |> run pProgram))
+let one f = 
+    IO.Path.Combine (__SOURCE_DIRECTORY__, "Sample Code\\Bonus3\\", f) 
+    |> buffer 
+    |> run pProgram
+
+runProgs  |> Seq.filter(function _,Failure(err) -> true | _,Success _ -> false)
+
+
+one "ass2r.pls"
 
 run pProgram "PLATYPUS  
     \> Comment
