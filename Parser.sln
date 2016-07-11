@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Parser", "Parser\Parser.fsproj", "{B406D313-6D89-4773-99FB-FC2F6743879E}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Parser", "Parser.fsproj", "{B406D313-6D89-4773-99FB-FC2F6743879E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
