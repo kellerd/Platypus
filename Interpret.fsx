@@ -11,8 +11,8 @@ let evalProgram (globalVars: IDictionary<string,obj>) (program:Program) =
     let (|SingleVar|ShortVar|) (o:obj) = 
         match o with 
         | :? float32 as v -> SingleVar (unbox<float32> v)
-        | :? int16 as v -> ShortVar (unbox<int16> v)
-        | _ -> failwith "Can't be other type"
+        | :? int16 as v  -> ShortVar (unbox<int16> v)
+        | x -> failwith <| sprintf "Can't be other type %s" (x.GetType().FullName)
     let (|AVariable|_|) = function
         | AVID (AVariableId(v)) -> Some v
         | _ -> None
@@ -20,7 +20,8 @@ let evalProgram (globalVars: IDictionary<string,obj>) (program:Program) =
         | SVID (StringVariableIdentifier(vid)) -> (globalVars.TryGetValue(vid)  |> function (true,v) -> Some(unbox<string> v) | _ -> None)
         | _ -> None
     let printVar = function
-            | AVariable(v) -> printfn "%A" v 
+            | AVariable(SingleVar(v)) -> printfn "Float 32 Value: %f" v 
+            | AVariable(ShortVar(v)) -> printfn "Int 16 Value: %d" v 
             | SVariable(v) -> printfn "%s" <| unbox<string> v 
             | _ -> printfn "null"
     let removeIfFound key = 
@@ -45,70 +46,41 @@ let evalProgram (globalVars: IDictionary<string,obj>) (program:Program) =
     
 
     let evalAExpression expr = 
-        let rec (|IsFloat|IsInt|) = function
-            | Unary(exp) -> checkUnaryArithmeticExpression exp
-            | Add(add) -> checkAdditiveArithmeticExpression add
-        and  checkUnaryArithmeticExpression = function
-            | _,primaryExpr -> checkPrimaryArithmeticExpression primaryExpr 
-        and checkAdditiveArithmeticExpression = function
-            | AddOpExpr(expr,_,multiplicative) -> 
-                match checkAdditiveArithmeticExpression expr, checkMultiplicativeArithmeticExpression multiplicative with
-                | Choice1Of2(_) as mapping,_ -> mapping
-                | _, ( Choice1Of2(_) as mapping) -> mapping
-                | mapping,_ -> mapping
-            | Multiplicative(expr) -> checkMultiplicativeArithmeticExpression expr 
-        and checkMultiplicativeArithmeticExpression = function
-            | MulOpExpr (expr, _ ,primary) -> 
-                match checkMultiplicativeArithmeticExpression expr, checkPrimaryArithmeticExpression primary with
-                |  Choice1Of2(_) as mapping,_ -> mapping
-                | _, ( Choice1Of2(_) as mapping) -> mapping
-                | mapping,_ -> mapping
-            | Primary (primary) -> checkPrimaryArithmeticExpression primary
-        and checkPrimaryArithmeticExpression = function
-            | Var(AVariableId(SingleVar(_))) -> Choice1Of2(expr)
-            | Var(AVariableId(ShortVar(_))) -> Choice2Of2(expr)
-            | Var(_) -> Choice2Of2(expr)
-            | Expr(IsFloat(_)) ->  Choice1Of2(expr)
-            | Expr(_) -> Choice2Of2(expr)
-            | Literal(Single(_)) ->  Choice1Of2(expr)
-            | Literal(Short(_)) -> Choice2Of2(expr)
- 
-        let evalArithmetic expr  = 
-            let addzero = (+) LanguagePrimitives.GenericZero
-
-            let rec evalArithmetic' continuation  expr = 
-                match expr with
-                | Unary(exp) -> evalUnaryArithmeticExpression continuation exp 
-                | Add(add) -> evalAdditiveArithmeticExpression continuation add 
-            and  evalUnaryArithmeticExpression continuation expr1 = 
-                match expr1 with
-                | (Plus,primaryExpr) -> evalPrimaryArithmeticExpression ((*) LanguagePrimitives.GenericOne >> continuation) primaryExpr
-                | (Minus,primaryExpr) -> evalPrimaryArithmeticExpression ((*) (LanguagePrimitives.GenericZero - LanguagePrimitives.GenericOne >> continuation)) primaryExpr 
-            and evalAdditiveArithmeticExpression  continuation  expr1 = 
-                match expr1 with
-                | AddOpExpr(expr,Plus,multiplicative) -> evalMultiplicativeArithmeticExpression  ((+) <| evalAdditiveArithmeticExpression  addzero expr >> continuation) multiplicative 
-                | AddOpExpr(expr,Minus,multiplicative) -> evalMultiplicativeArithmeticExpression  ((-) <|  evalAdditiveArithmeticExpression  addzero expr >> continuation) multiplicative
-                | Multiplicative(expr) -> evalMultiplicativeArithmeticExpression  addzero expr 
-            and evalMultiplicativeArithmeticExpression continuation  expr1 = 
-                match expr1 with
-                | MulOpExpr (expr, Mul ,primary) -> evalPrimaryArithmeticExpression  (((*) <| evalMultiplicativeArithmeticExpression  addzero expr) >> continuation)  primary 
-                | MulOpExpr (expr, Div ,primary) -> evalPrimaryArithmeticExpression  (((/) <| evalMultiplicativeArithmeticExpression  addzero expr) >> continuation)  primary 
-                | Primary (primary) -> evalPrimaryArithmeticExpression  addzero primary
-            and evalPrimaryArithmeticExpression continuation  expr1 = 
-                match expr,expr1 with
-                | IsFloat(_),Var(AVariableId(SingleVar(v))) ->  v |> float32 |> continuation |> Choice1Of2
-                | IsFloat(_),Var(AVariableId(ShortVar(v))) ->  v |> float32 |> continuation |> Choice1Of2
-                | IsFloat(_),Var(_) -> LanguagePrimitives.GenericZero |> float32 |> Choice1Of2
-                | IsFloat(_),Expr(e) -> evalArithmetic'  continuation e
-                | IsFloat(_),Literal(Single(v)) ->  v  |> float32 |> continuation |> Choice1Of2
-                | IsFloat(_),Literal(Short(v)) ->  v |> float32 |> continuation |> Choice1Of2
-                | IsInt(_),Var(AVariableId(SingleVar(v))) ->  v |> int16 |> continuation |> Choice2Of2
-                | IsInt(_),Var(AVariableId(ShortVar(v))) ->  v |> int16 |> continuation |> Choice2Of2
-                | IsInt(_),Var(_) -> LanguagePrimitives.GenericZero |> int16 |> Choice2Of2
-                | IsInt(_),Expr(e) -> evalArithmetic'  continuation e
-                | IsInt(_),Literal(Single(v)) ->  v  |> int16 |> continuation |> Choice2Of2
-                | IsInt(_),Literal(Short(v)) ->  v |> int16 |> continuation |> Choice2Of2
-            evalArithmetic' addzero expr
+        let rec (|IsFloat|_|) expr = 
+            let rec mapFloatExpr = function
+                | Arithmetic (ar1,op,ar2) -> (mapFloatExpr ar1,op,mapFloatExpr ar2) |> Arithmetic
+                | ArithmeticVariable(AVariableId(ShortVar(v))) -> ArithmeticLiteral(Single(v|>float32))
+                | ArithmeticLiteral(Short(v)) ->  ArithmeticLiteral(Single(v|>float32))
+                | v -> v
+            match expr with
+            | Arithmetic (IsFloat(ar1),op,_) -> Some expr
+            | Arithmetic (_,op,IsFloat(ar2)) -> Some expr
+            | Arithmetic(_) -> None
+            | ArithmeticVariable(AVariableId(ShortVar(_))) -> None
+            | ArithmeticVariable(AVariableId(SingleVar(_))) -> Some expr
+            | ArithmeticVariable(_) -> None
+            | ArithmeticLiteral(Single(_)) -> Some expr
+            | ArithmeticLiteral(Short(_)) -> None
+            |> Option.map mapFloatExpr 
+        let rec evalArithmetic expr  : NumberLiteral =
+            let doOp = function
+                | (Short(lit),Plus,Short(lit2)) -> Short(lit + lit2)
+                | (Short(lit),Minus,Short(lit2)) -> Short(lit - lit2)
+                | (Short(lit),Mul,Short(lit2)) -> Short(lit * lit2)
+                | (Short(lit),Div,Short(lit2)) -> Short(lit / lit2)
+                | (Single(lit),Plus,Single(lit2)) -> Single(lit + lit2)
+                | (Single(lit),Minus,Single(lit2)) -> Single(lit - lit2)
+                | (Single(lit),Mul,Single(lit2)) -> Single(lit * lit2)
+                | (Single(lit),Div,Single(lit2)) -> Single(lit / lit2)
+                | _ -> failwith "Can't do casts this way, expr should be pre-cast"
+            match expr with
+                | IsFloat(Arithmetic(ar1,op,ar2)) -> (evalArithmetic ar1,op,evalArithmetic ar2) |> doOp
+                | Arithmetic(ar1,op,ar2) -> (evalArithmetic ar1,op,evalArithmetic ar2) |> doOp
+                | ArithmeticLiteral(v) -> v
+                | ArithmeticVariable(AVariableId(ShortVar(v))) -> Short(v)
+                | ArithmeticVariable(AVariableId(SingleVar(v))) -> Single(v)
+                | ArithmeticVariable(_) -> Short(Unchecked.defaultof<int16>)
+                | ArithmeticLiteral(v) ->  v
 //            match expr with 
 //            | IsFloat(expr) -> evalArithmetic' validateNumeric<float32> addzero expr  |> box
 //            | _ -> evalArithmetic' validateNumeric<int16> addzero expr  |> box
@@ -128,14 +100,14 @@ let evalProgram (globalVars: IDictionary<string,obj>) (program:Program) =
     match program with 
     | Platypus (statements,_) -> List.iter evalStatements statements 
 
-let pls = "PLATYPUS{WRITE(a$);WRITE(b);}" 
+let pls = "PLATYPUS{b=5;WRITE(b);}" 
 
 let doProgram program = 
     let blank = (new Dictionary<string,obj>())
     //use blank = dict [("a$",box "a");("b",box 7);]
     let context = evalProgram blank
-    match run pProgram pls with
-    | Success (p,eof) -> context p
+    match run pProgram program with
+    | Success (p,_) -> context p
     | Failure (err) -> printfn "%s" err
     printfn "%A" context
     blank.Clear()

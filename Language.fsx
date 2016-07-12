@@ -10,29 +10,33 @@ type OneOrMany<'a> = | One of 'a | Many of 'a * 'a list
         | xs -> Many(head,tail)
 type ArithmeticVariableIdentifier = ArithmeticVariableIdentifier of string
 type StringVariableIdentifier = StringVariableIdentifier of string
-type AdditiveOp = Plus | Minus
+type ArithmeticOp = Plus | Minus | Mul | Div
 type AssignOp = AssignOp
-type MultiplicativeOp = Mul | Div
 type NumberLiteral = Single of float32 | Short of int16
 type RelationalOp = Eq | Ne | Gt | Lt
 type StringLiteral = StringLiteral of string
 type StringConcatOp = StringConcatOp  
 type LogicalOp = And | Or
-type ArithmeticExpression = 
+type ParsedArithmeticExpression = 
     | Unary of UnaryArithmeticExpression
     | Add of AdditiveArithmeticExpression
 and UnaryArithmeticExpression = 
-    AdditiveOp * PrimaryArithmeticExpression
+    ArithmeticOp * PrimaryArithmeticExpression
 and AdditiveArithmeticExpression = 
-    | AddOpExpr of AdditiveArithmeticExpression * AdditiveOp * MultiplicativeArithmeticExpression
+    | AddOpExpr of AdditiveArithmeticExpression * ArithmeticOp * MultiplicativeArithmeticExpression
     | Multiplicative of MultiplicativeArithmeticExpression
 and MultiplicativeArithmeticExpression =
-    | MulOpExpr of MultiplicativeArithmeticExpression * MultiplicativeOp * PrimaryArithmeticExpression
+    | MulOpExpr of MultiplicativeArithmeticExpression * ArithmeticOp * PrimaryArithmeticExpression
     | Primary of PrimaryArithmeticExpression
 and PrimaryArithmeticExpression = 
     | Var of ArithmeticVariableIdentifier
-    | Expr of ArithmeticExpression
+    | Expr of ParsedArithmeticExpression
     | Literal of NumberLiteral
+
+type ArithmeticExpression = 
+    | Arithmetic of ArithmeticExpression * ArithmeticOp * ArithmeticExpression
+    | ArithmeticVariable of ArithmeticVariableIdentifier
+    | ArithmeticLiteral of NumberLiteral
 
 type StringExpression = 
     | SVar of StringVariableIdentifier 

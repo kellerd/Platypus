@@ -77,7 +77,7 @@ let pComment =
     let commentStart = pstring "\\>"
     let middle = many pCommentCharacter
     between commentStart middle pLineTerminator
-let pIgnore = many ((many1 pWhiteSpace |>> fun _ -> ()) <|> (pComment |>> fun _ -> ()))
+let pIgnore = many ((many1 pWhiteSpace |>> ignore) <|> (pComment |>> ignore))
 let (.>->.) a b = a .>> pIgnore .>>. b
 let (.>->) a b = a .>> pIgnore .>> b
 let (>->.) a b = a >>. pIgnore >>. b
@@ -150,37 +150,60 @@ let pBetweenBrace p = betweenC '{' (pIgnore >>. p .>> pIgnore) '}'
 let pPrimaryStringExpression = pIgnore >>. (pStringIdentifier |>> SVar) <|> (pStringLiteral |>> SLiteral) .>> pIgnore
 let pStringExpression = pIgnore >>. sepBy1 pPrimaryStringExpression pStringConcatOp .>> pIgnore
 
-let rec pArithExpression a = 
-    (notp parseEOF) >>= (fun _ -> 
-        pIgnore >>. choice [
-            pAdditiveArithmeticExpression a |>> Add
-            pUnaryArithmeticExpression a;]    .>> pIgnore)
-and pUnaryArithmeticExpression a=  
-    pIgnore >>. pAdditiveOp .>->. (pPrimaryArithmeticExpression a)     .>-> pIgnore |>> Unary
-and pAdditiveArithmeticExpression a = 
-    pIgnore >>. (pMultiplicativeArithmeticExpression a) .>->. many (pAdditiveArithmeticExpression' a    .>> pIgnore)     .>> pIgnore
-    |>> fun (primary,additive) ->
-        let rec MakeAdditive = function
-            | (mul,[]) -> Multiplicative primary
-            | (mul,(op,mul2)::tail) -> (MakeAdditive(mul,tail),op,mul2) |> AddOpExpr
-        MakeAdditive (primary,additive)
-and pAdditiveArithmeticExpression' a = 
-    pIgnore >>. pAdditiveOp .>->. (pMultiplicativeArithmeticExpression a)     .>> pIgnore
-and pMultiplicativeArithmeticExpression a = 
-    pIgnore >>. (pPrimaryArithmeticExpression a) .>->. many (pMultiplicativeArithmeticExpression' a    .>> pIgnore)     .>> pIgnore
-    |>> fun (primary,multiplicative) ->
-        let rec MakeMultiplicative = function
-            | (primary,[]) -> Primary primary
-            | (primary,(op,primary2)::tail) -> (MakeMultiplicative(primary,tail),op,primary2) |> MulOpExpr
-        MakeMultiplicative (primary,multiplicative)
-and pMultiplicativeArithmeticExpression' a = 
-    pIgnore >>. pMultiplicativeOp .>->. (pPrimaryArithmeticExpression a)     .>> pIgnore
-and pPrimaryArithmeticExpression a = 
-            pIgnore >>. choice [pArithmeticIdentifier |>> Var;
-                pFloatingPointLiteral |>> Literal;
-                pIntegerLiteral |>> Literal;
-                pBetweenParens (pArithExpression a) |>> Expr]    .>> pIgnore
+let rec mapArithmeticExpression (expr:ParsedArithmeticExpression) : ArithmeticExpression = 
+    match expr with 
+    | Unary(Minus,primary) ->
+        (ArithmeticLiteral(Short(-1s)), Mul, mapPrimary primary) |> Arithmetic
+    | Unary(Plus,primary) ->
+        (ArithmeticLiteral(Short(0s)), Mul, mapPrimary primary) |> Arithmetic
+    | Add(expr) -> mapAdditive expr
+    | Unary(_) -> failwith "Not implemented yet"
+and mapAdditive = function
+    | AddOpExpr(expr,op,mul) -> (mapAdditive expr,op,mapMultiplicative mul) |> Arithmetic
+    | Multiplicative(expr) -> mapMultiplicative expr 
+and mapMultiplicative = function
+    | MulOpExpr (expr, op ,primary) -> (mapMultiplicative expr,op,mapPrimary primary) |> Arithmetic
+    | Primary (primary) -> mapPrimary primary
+and mapPrimary = function
+    | Var(var) -> ArithmeticVariable var 
+    | Expr(expr) -> mapArithmeticExpression expr
+    | Literal(lit) ->  ArithmeticLiteral lit
 
+
+
+
+let pArithmeticExpression = 
+    let rec pParsedArithExpression a = 
+        (notp parseEOF) >>= (fun _ -> 
+            pIgnore >>. choice [
+                pAdditiveArithmeticExpression a |>> Add
+                pUnaryArithmeticExpression a;]    .>> pIgnore)
+    and pUnaryArithmeticExpression a=  
+        pIgnore >>. pAdditiveOp .>->. (pPrimaryArithmeticExpression a)     .>-> pIgnore |>> Unary
+    and pAdditiveArithmeticExpression a = 
+        pIgnore >>. (pMultiplicativeArithmeticExpression a) .>->. many (pAdditiveArithmeticExpression' a    .>> pIgnore)     .>> pIgnore
+        |>> fun (primary,additive) ->
+            let rec makeAdditive = function
+                | (mul,[]) -> Multiplicative mul
+                | (mul,(op,mul2)::tail) -> (makeAdditive(mul,tail),op,mul2) |> AddOpExpr
+            makeAdditive (primary,additive)
+    and pAdditiveArithmeticExpression' a = 
+        pIgnore >>. pAdditiveOp .>->. (pMultiplicativeArithmeticExpression a)     .>> pIgnore
+    and pMultiplicativeArithmeticExpression a = 
+        pIgnore >>. (pPrimaryArithmeticExpression a) .>->. many (pMultiplicativeArithmeticExpression' a    .>> pIgnore)     .>> pIgnore
+        |>> fun (primary,multiplicative) ->
+            let rec makeMultiplicative = function
+                | (primary,[]) -> Primary primary
+                | (primary,(op,primary2)::tail) -> (makeMultiplicative(primary,tail),op,primary2) |> MulOpExpr
+            makeMultiplicative (primary,multiplicative)
+    and pMultiplicativeArithmeticExpression' a = 
+        pIgnore >>. pMultiplicativeOp .>->. (pPrimaryArithmeticExpression a)     .>> pIgnore
+    and pPrimaryArithmeticExpression a = 
+                pIgnore >>. choice [pArithmeticIdentifier |>> Var;
+                    pFloatingPointLiteral |>> Literal;
+                    pIntegerLiteral |>> Literal;
+                    pBetweenParens (pParsedArithExpression a) |>> Expr]    .>> pIgnore
+    pParsedArithExpression () |>> mapArithmeticExpression
 
 let pAssignmentExpression = parse {
     let! variable = (pStringIdentifier .>-> pAssignmentOp |>> SVID) <|> (pArithmeticIdentifier .>-> pAssignmentOp |>> AVID)
@@ -191,14 +214,14 @@ let pAssignmentExpression = parse {
                     return StringAssign(vid,expr)
                     }
                 | AVID (vid) ->  parse {
-                    let! expr = pIgnore >>. pArithExpression() .>> pIgnore
+                    let! expr = pIgnore >>. pArithmeticExpression .>> pIgnore
                     return ArithmeticAssign(vid,expr)
                 }
 }
 let pAssignmentStatement =  
     (notp parseEOF) >>= (fun _ ->
     pIgnore >>. pAssignmentExpression .>-> pStatementSeparator .>> pIgnore
-    |>> fun statement -> Assign statement     
+    |>> Assign     
     )
 let optStatementSep = opt pStatementSeparator
 let optAssign = opt pAssignmentExpression  
@@ -222,23 +245,22 @@ let pRelationalExpression =
         pString |>> (untuple >> Str)] .>> pIgnore |>> JustRelational
 
 let pLogicalOp = pAnd <|> pOr
+let rec mapConditional = function 
+    | rl, [] -> rl |> JustAnd 
+    | baseRl, (Or,rl1)::(And,JustRelational(rl2))::tail -> 
+        (baseRl,(Or,LogicalAnd(rl1,rl2))::tail) |> mapConditional
+    | baseRl, (Or,rl1)::(And,a)::tail -> 
+        (baseRl,(Or,LogicalAnd(rl1,LExpr(JustAnd(a))))::tail) |> mapConditional 
+    | baseRl, (Or,rl1)::tail -> 
+        (JustRelational(LExpr(LogicalOr(JustAnd(baseRl),rl1))),tail) |> mapConditional
+    | baseRl, (And,JustRelational(rl2))::tail -> 
+        (LogicalAnd(baseRl,rl2),tail) |> mapConditional
+    | baseRl, (And,a)::tail -> 
+        (LogicalAnd(baseRl,LExpr(JustAnd(a))),tail) |> mapConditional
+
 let pConditionalExpression = 
     pRelationalExpression .>->. many (pLogicalOp .>->. pRelationalExpression .>-> pIgnore)
-    |>> fun input ->
-            //After matching higher order, recurse
-            let rec mapConditional = function 
-                | rl, [] -> rl |> JustAnd 
-                | baseRl, (Or,rl1)::(And,JustRelational(rl2))::tail -> 
-                    (baseRl,(Or,LogicalAnd(rl1,rl2))::tail) |> mapConditional
-                | baseRl, (Or,rl1)::(And,a)::tail -> 
-                    (baseRl,(Or,LogicalAnd(rl1,LExpr(JustAnd(a))))::tail) |> mapConditional 
-                | baseRl, (Or,rl1)::tail -> 
-                    (JustRelational(LExpr(LogicalOr(JustAnd(baseRl),rl1))),tail) |> mapConditional
-                | baseRl, (And,JustRelational(rl2))::tail -> 
-                    (LogicalAnd(baseRl,rl2),tail) |> mapConditional
-                | baseRl, (And,a)::tail -> 
-                    (LogicalAnd(baseRl,LExpr(JustAnd(a))),tail) |> mapConditional
-            mapConditional input
+    |>> mapConditional
 let pVariableList = sepBy1 ((pStringIdentifier |>> SVID) <|> (pArithmeticIdentifier |>> AVID)) (pIgnore >>. pComma .>> pIgnore)
 let pInputStatement = 
     pREAD >->. (pBetweenParens pVariableList) .>-> pStatementSeparator
