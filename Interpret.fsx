@@ -20,20 +20,22 @@ let evalProgram (globalVars: IDictionary<string,obj>) (program:Program) =
         | SVID (StringVariableIdentifier(vid)) -> (globalVars.TryGetValue(vid)  |> function (true,v) -> Some(unbox<string> v) | _ -> None)
         | _ -> None
     let printVar = function
-            | AVariable(SingleVar(v)) -> printfn "Float 32 Value: %f" v 
-            | AVariable(ShortVar(v)) -> printfn "Int 16 Value: %d" v 
-            | SVariable(v) -> printfn "%s" <| unbox<string> v 
-            | _ -> printfn "null"
+            | AVariable(SingleVar(v)) -> sprintf "Float 32 Value: %f" v 
+            | AVariable(ShortVar(v)) -> sprintf "Int 16 Value: %d" v 
+            | SVariable(v) -> sprintf "%s" <| unbox<string> v 
+            | _ -> sprintf "null"
     let removeIfFound key = 
         if globalVars.ContainsKey key then
             globalVars.Remove(key) |> ignore
         globalVars
-    let setVar var value = 
-        match var with
-        | AVID ((ArithmeticVariableIdentifier(vid))) -> 
-            (removeIfFound vid).Add(vid,box value)
-        | SVID (StringVariableIdentifier(vid)) -> 
-            (removeIfFound vid).Add(vid,box value)
+    let setVar var value = //Default should be int, upcast to float, stays float
+        match var,value with
+        | AVID ((ArithmeticVariableIdentifier(vid))),SingleVar(v) -> 
+            (removeIfFound vid).Add(vid,box v)
+        | AVID ((ArithmeticVariableIdentifier(vid))),ShortVar(v) -> 
+            (removeIfFound vid).Add(vid,box v)
+        | SVID (StringVariableIdentifier(vid)),v-> 
+            (removeIfFound vid).Add(vid,box v)
 //    let evalAExpression expression = 
     let stringExpressionToString = function 
         | SVar(v) -> match SVID(v) with
@@ -87,20 +89,21 @@ let evalProgram (globalVars: IDictionary<string,obj>) (program:Program) =
         
         evalArithmetic expr 
     let evalStatements = function
-        | Output (Write(Vars(vars))) -> OneOrMany<_>.toList vars |> List.iter printVar 
-        | Assign(ArithmeticAssign(var,expression)) -> evalAExpression expression |> setVar (AVID var)
+        | Output(Write(Empty)) ->  printfn ""
+        | Output(Write(StringOutputLine(StringLiteral(s)))) -> s |> System.Text.RegularExpressions.Regex.Unescape |> printfn "%s"
+        | Output (Write(Vars(vars))) -> OneOrMany<_>.toList vars |> List.map printVar |> String.concat ""  |> System.Text.RegularExpressions.Regex.Unescape |> printfn "%s" 
+        | Assign(ArithmeticAssign(var,expression)) -> evalAExpression expression |> (function | Short(v) -> v |> setVar (AVID var)
+                                                                                              | Single(v) -> v |> setVar (AVID var))
         | Assign(StringAssign(var,expression)) -> evalSExpression expression |> setVar (SVID var)
-        | Select(_) -> failwith "Not implemented yet"
-        | Iter(_) -> failwith "Not implemented yet"
-        | Input(_) -> failwith "Not implemented yet"
+        // | Select(_) -> failwith "Not implemented yet"
+        // | Iter(_) -> failwith "Not implemented yet"
+        // | Input(_) -> failwith "Not implemented yet"
 //        | Assign
 //        | Select
 //        | Iter 
 //        | Input 
     match program with 
     | Platypus (statements,_) -> List.iter evalStatements statements 
-
-let pls = "PLATYPUS{b=5;WRITE(b);}" 
 
 let doProgram program = 
     let blank = (new Dictionary<string,obj>())
@@ -109,7 +112,10 @@ let doProgram program =
     match run pProgram program with
     | Success (p,_) -> context p
     | Failure (err) -> printfn "%s" err
-    printfn "%A" context
     blank.Clear()
 
+let pls = """PLATYPUS{c = 5/10.0 ;WRITE(c);}     """ 
 doProgram pls
+one "Sample Code\\Bonus3" "string.pls" |> doProgram
+
+

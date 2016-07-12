@@ -78,6 +78,8 @@ let pComment =
     let middle = many pCommentCharacter
     between commentStart middle pLineTerminator
 let pIgnore = many ((many1 pWhiteSpace |>> ignore) <|> (pComment |>> ignore))
+let maybeSpace p = pIgnore >>. p .>> pIgnore
+
 let (.>->.) a b = a .>> pIgnore .>>. b
 let (.>->) a b = a .>> pIgnore .>> b
 let (>->.) a b = a >>. pIgnore >>. b
@@ -136,19 +138,19 @@ let pRelationalOp =
         pstring "==" |>>! Eq;
         pstring "!="  |>>! Ne]
         
-let pStringConcatOp =  pIgnore >>. pstring "<<" .>> pIgnore
+let pStringConcatOp =  pstring "<<" |> maybeSpace
 let pAdditiveOp = choice [pstring "+" |>>! Plus;
                           pstring "-" |>>! Minus]
 let pMultiplicativeOp = choice [pstring "*" |>>! Mul;
                                 pstring "/" |>>! Div]
 
-let pBetweenParens p = betweenC '(' (pIgnore >>. p .>> pIgnore) ')'
+let pBetweenParens p = betweenC '(' (maybeSpace p) ')'
                       |> between pIgnore <| pIgnore
-let pBetweenBrace p = betweenC '{' (pIgnore >>. p .>> pIgnore) '}'
+let pBetweenBrace p = betweenC '{' (maybeSpace p) '}'
                       |> between pIgnore <| pIgnore
 //Semantic
-let pPrimaryStringExpression = pIgnore >>. (pStringIdentifier |>> SVar) <|> (pStringLiteral |>> SLiteral) .>> pIgnore
-let pStringExpression = pIgnore >>. sepBy1 pPrimaryStringExpression pStringConcatOp .>> pIgnore
+let pPrimaryStringExpression =  ((pStringIdentifier |>> SVar) <|> (pStringLiteral |>> SLiteral)) |> maybeSpace
+let pStringExpression = sepBy1 pPrimaryStringExpression pStringConcatOp |> maybeSpace
 
 let rec mapArithmeticExpression (expr:ParsedArithmeticExpression) : ArithmeticExpression = 
     match expr with 
@@ -175,74 +177,64 @@ and mapPrimary = function
 let pArithmeticExpression = 
     let rec pParsedArithExpression a = 
         (notp parseEOF) >>= (fun _ -> 
-            pIgnore >>. choice [
+            choice [
                 pAdditiveArithmeticExpression a |>> Add
-                pUnaryArithmeticExpression a;]    .>> pIgnore)
+                pUnaryArithmeticExpression a;] |> maybeSpace)
     and pUnaryArithmeticExpression a=  
-        pIgnore >>. pAdditiveOp .>->. (pPrimaryArithmeticExpression a)     .>-> pIgnore |>> Unary
+        pAdditiveOp .>->. (pPrimaryArithmeticExpression a) |> maybeSpace |>> Unary
     and pAdditiveArithmeticExpression a = 
-        pIgnore >>. (pMultiplicativeArithmeticExpression a) .>->. many (pAdditiveArithmeticExpression' a    .>> pIgnore)     .>> pIgnore
+        (pMultiplicativeArithmeticExpression a) .>->. many (pAdditiveArithmeticExpression' a    .>> pIgnore) |> maybeSpace
         |>> fun (primary,additive) ->
             let rec makeAdditive = function
                 | (mul,[]) -> Multiplicative mul
                 | (mul,(op,mul2)::tail) -> (makeAdditive(mul,tail),op,mul2) |> AddOpExpr
             makeAdditive (primary,additive)
     and pAdditiveArithmeticExpression' a = 
-        pIgnore >>. pAdditiveOp .>->. (pMultiplicativeArithmeticExpression a)     .>> pIgnore
+        pAdditiveOp .>->. (pMultiplicativeArithmeticExpression a)   |> maybeSpace
     and pMultiplicativeArithmeticExpression a = 
-        pIgnore >>. (pPrimaryArithmeticExpression a) .>->. many (pMultiplicativeArithmeticExpression' a    .>> pIgnore)     .>> pIgnore
+        (pPrimaryArithmeticExpression a) .>->. many (pMultiplicativeArithmeticExpression' a    .>> pIgnore)  |> maybeSpace
         |>> fun (primary,multiplicative) ->
             let rec makeMultiplicative = function
                 | (primary,[]) -> Primary primary
                 | (primary,(op,primary2)::tail) -> (makeMultiplicative(primary,tail),op,primary2) |> MulOpExpr
             makeMultiplicative (primary,multiplicative)
     and pMultiplicativeArithmeticExpression' a = 
-        pIgnore >>. pMultiplicativeOp .>->. (pPrimaryArithmeticExpression a)     .>> pIgnore
+        pMultiplicativeOp .>->. (pPrimaryArithmeticExpression a)  |> maybeSpace
     and pPrimaryArithmeticExpression a = 
-                pIgnore >>. choice [pArithmeticIdentifier |>> Var;
+                choice [pArithmeticIdentifier |>> Var;
                     pFloatingPointLiteral |>> Literal;
                     pIntegerLiteral |>> Literal;
-                    pBetweenParens (pParsedArithExpression a) |>> Expr]    .>> pIgnore
+                    pBetweenParens (pParsedArithExpression a) |>> Expr]    |> maybeSpace
     pParsedArithExpression () |>> mapArithmeticExpression
 
-let pAssignmentExpression = parse {
-    let! variable = (pStringIdentifier .>-> pAssignmentOp |>> SVID) <|> (pArithmeticIdentifier .>-> pAssignmentOp |>> AVID)
-    return!  
-         match variable with 
-                | SVID(vid) -> parse {
-                    let! expr = pIgnore >>. pStringExpression .>> pIgnore
-                    return StringAssign(vid,expr)
-                    }
-                | AVID (vid) ->  parse {
-                    let! expr = pIgnore >>. pArithmeticExpression .>> pIgnore
-                    return ArithmeticAssign(vid,expr)
-                }
-}
+let pStringAssign = pStringIdentifier .>-> pAssignmentOp .>->. pStringExpression |>> StringAssign
+let pArithmeticAssign = pArithmeticIdentifier .>-> pAssignmentOp .>->. pArithmeticExpression |>> ArithmeticAssign
+let pAssignmentExpression = (pStringAssign <|> pArithmeticAssign) |>maybeSpace
+    
 let pAssignmentStatement =  
     (notp parseEOF) >>= (fun _ ->
-    pIgnore >>. pAssignmentExpression .>-> pStatementSeparator .>> pIgnore
+    pAssignmentExpression .>-> pStatementSeparator |> maybeSpace
     |>> Assign     
     )
 let optStatementSep = opt pStatementSeparator
 let optAssign = opt pAssignmentExpression  
 let pPrimaryArithmeticRelationalExpression = 
-    pIgnore >>. choice [
+    choice [
         pArithmeticIdentifier |>> PrimeRelAVid;
         pFloatingPointLiteral |>> PrimaryRelALit
         pIntegerLiteral |>> PrimaryRelALit;
-    ]  .>> pIgnore
+    ]  |> maybeSpace
 let pPrimaryStringRelationalExpression = 
-    pIgnore >>. choice [
+    choice [
         pStringIdentifier |>> PrimaryRelSVid
         pStringLiteral |>> PrimaryRelSLit
-    ] .>> pIgnore
+    ] |> maybeSpace
 let pArith = pPrimaryArithmeticRelationalExpression .>->. pRelationalOp .>->. pPrimaryArithmeticRelationalExpression
 let pString = pPrimaryStringRelationalExpression .>->. pRelationalOp .>->. pPrimaryStringRelationalExpression 
 let pRelationalExpression = 
-    pIgnore >>.
     choice [
         pArith |>> (untuple >> Arith);
-        pString |>> (untuple >> Str)] .>> pIgnore |>> JustRelational
+        pString |>> (untuple >> Str)] |> maybeSpace |>> JustRelational
 
 let pLogicalOp = pAnd <|> pOr
 let rec mapConditional = function 
@@ -261,7 +253,7 @@ let rec mapConditional = function
 let pConditionalExpression = 
     pRelationalExpression .>->. many (pLogicalOp .>->. pRelationalExpression .>-> pIgnore)
     |>> mapConditional
-let pVariableList = sepBy1 ((pStringIdentifier |>> SVID) <|> (pArithmeticIdentifier |>> AVID)) (pIgnore >>. pComma .>> pIgnore)
+let pVariableList = sepBy1 ((pStringIdentifier |>> SVID) <|> (pArithmeticIdentifier |>> AVID)) (maybeSpace pComma)
 let pInputStatement = 
     pREAD >->. (pBetweenParens pVariableList) .>-> pStatementSeparator
     |>> (Read >> Input)
@@ -280,11 +272,10 @@ let pOutputStatement =
 let pStatement =
     let rec pStatement a = 
         (notp parseEOF) >>= (fun _ ->
-        pIgnore >->. choice [pAssignmentStatement;
+        choice [pAssignmentStatement;
         pSelectionStatement a;
         pIterStatement a;
-        pInputStatement;pOutputStatement]
-        .>-> pIgnore)
+        pInputStatement;pOutputStatement] |> maybeSpace)
     and pSelectionStatement a = 
         pIF >->. pBetweenParens pConditionalExpression .>-> pTHEN .>->. 
         (pStatement a |> many1 |> pBetweenBrace ) .>->. 
@@ -302,10 +293,9 @@ let pStatement =
     pStatement()
 
 
-let pProgram = pIgnore >>. pPLATYPUS >->. (pStatement |> many |>  pBetweenBrace) .>->. parseEOF |>> Platypus 
+let pProgram = pPLATYPUS >->. (pStatement |> many |>  pBetweenBrace) |> maybeSpace .>>. parseEOF |>> Platypus 
 
 let buffer file = System.IO.File.ReadAllText file
 let one dir f = 
     IO.Path.Combine (__SOURCE_DIRECTORY__, dir, f) 
     |> buffer 
-    |> run pProgram
