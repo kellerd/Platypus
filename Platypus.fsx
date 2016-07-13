@@ -9,7 +9,7 @@ open System
 let many1 p = parse {
     let! head = p
     let! tail = many p
-    return OneOrMany<_>.ofList head tail
+    return OneOrMany<_>.OfList head tail
 } 
 
 let sepBy1 p seperator = parse {
@@ -20,11 +20,11 @@ let sepBy1 p seperator = parse {
     }
     let! head = p
     let! tail = many split
-    return OneOrMany<_>.ofList head tail
+    return OneOrMany<_>.OfList head tail
 }
 
 let sepBy p seperator =
-    (sepBy1 p seperator |>> OneOrMany<_>.toList) <|> ( retn [])
+    (sepBy1 p seperator |>> OneOrMany<_>.ToList) <|> ( retn [])
 
 let parseAny = 
     fun str -> 
@@ -34,9 +34,9 @@ let parseAny =
         | _ -> Success (str.[0], str.[1..])
     |> Parser
 
-let pchar charToMatch =
+let parseChar charToMatch =
     fun str ->
-        match run parseAny str with
+        match runParser parseAny str with
         | Success (c,rest) when c = charToMatch -> Success(c,rest)
         | Success(c,rest) -> Failure (sprintf "Not same char. Wanted: %c, Got: %c: rest is: %s" charToMatch c rest)
         | Failure(err) -> Failure(err)
@@ -52,105 +52,105 @@ let parseEOF =
 
 let anyOf listOfChars = 
         listOfChars
-        |> List.map pchar
+        |> List.map parseChar
         |> choice
 
 let charListToStr charList = 
      String(List.toArray charList)
 
-let pstring (stringToMatch:string) = 
+let parseString (stringToMatch:string) = 
     stringToMatch.ToCharArray() 
-    |> Array.map pchar 
+    |> Array.map parseChar 
     |> Array.toList 
     |> sequence 
     |>> charListToStr
 
-let betweenC cbefore p cend = between (pchar cbefore) p (pchar cend)
+let betweenC cbefore p cend = between (parseChar cbefore) p (parseChar cend)
 
 //Lexical definition
 
-let pInputCharacter = [0..255] |> List.map (Convert.ToChar) |> anyOf
-let pLineTerminator = pchar '\r' >>. pchar '\n' <|> anyOf ['\n';'\r']
-let pWhiteSpace =  anyOf ['\t';'\f';'\v';' '] <|> pLineTerminator
-let pCommentCharacter = notp pLineTerminator &&. parseAny
-let pComment = 
-    let commentStart = pstring "\\>"
-    let middle = many pCommentCharacter
-    between commentStart middle pLineTerminator
-let pIgnore = many ((many1 pWhiteSpace |>> ignore) <|> (pComment |>> ignore))
-let maybeSpace p = pIgnore >>. p .>> pIgnore
+let inputCharacter = [0..255] |> List.map (Convert.ToChar) |> anyOf
+let lineTerminator = parseChar '\r' >>. parseChar '\n' <|> anyOf ['\n';'\r']
+let whiteSpace =  anyOf ['\t';'\f';'\v';' '] <|> lineTerminator
+let commentCharacter = notp lineTerminator &&. parseAny
+let comment = 
+    let commentStart = parseString "\\>"
+    let middle = many commentCharacter
+    between commentStart middle lineTerminator
+let anyWhitespace = many ((many1 whiteSpace |>> ignore) <|> (comment |>> ignore))
+let ignoreSpace p = anyWhitespace >>. p .>> anyWhitespace
 
-let (.>->.) a b = a .>> pIgnore .>>. b
-let (.>->) a b = a .>> pIgnore .>> b
-let (>->.) a b = a >>. pIgnore >>. b
-let pLetter = anyOf (['a' .. 'z'] @ ['A' .. 'Z'])
-let pDigit = anyOf ['0' .. '9']
-let pLetterOrDigit = pLetter <|> pDigit
-let pBaseIdent = 
-    pLetter .>>. many pLetterOrDigit 
-let pArithmeticIdentifier = 
-    pBaseIdent
+let (.>->.) a b = a .>> anyWhitespace .>>. b
+let (.>->) a b = a .>> anyWhitespace .>> b
+let (>->.) a b = a >>. anyWhitespace >>. b
+let letter = anyOf (['a' .. 'z'] @ ['A' .. 'Z'])
+let digit = anyOf ['0' .. '9']
+let letterOrDigit = letter <|> digit
+let baseIdent = 
+    letter .>>. many letterOrDigit 
+let arithmeticIdentifier = 
+    baseIdent
     |>> (List.Cons >> List.truncate 16 >> charListToStr >> ArithmeticVariableIdentifier)
-let pStringIdentifier = 
-    pBaseIdent 
-    |>> (List.Cons >> List.truncate 15) .>>. pchar '$' 
+let stringIdentifier = 
+    baseIdent 
+    |>> (List.Cons >> List.truncate 15) .>>. parseChar '$' 
     |>> (fun (list,nd) ->  
         list @ [nd] |> charListToStr |>  StringVariableIdentifier)
-let pPLATYPUS = pstring "PLATYPUS"
-let pIF = pstring "IF"
-let pTHEN = pstring "THEN"
-let pELSE = pstring "ELSE"
-let pFOR = pstring "FOR"
-let pDO = pstring "DO"
-let pREAD = pstring "READ"
-let pWRITE = pstring "WRITE"
-let integerLiteral = parseAny |>> int16
+let PLATYPUS = parseString "PLATYPUS"
+let IF = parseString "IF"
+let THEN = parseString "THEN"
+let ELSE = parseString "ELSE"
+let FOR = parseString "FOR"
+let DO = parseString "DO"
+let READ = parseString "READ"
+let WRITE = parseString "WRITE"
 let strToHex hexStr = Convert.ToInt16(hexStr,16)
-let pHexDigit = anyOf (['0' ..'9'] @ ['A' .. 'F'])
-let pNonZeroDigit = anyOf ['1' .. '9']
-let pDecimalInteger = 
-   (pNonZeroDigit .>>. many pDigit |>> (List.Cons >> charListToStr)) <|> pstring "0" 
-let pHexIntegerLiteral = 
-    pstring "0h" >>. many1 pHexDigit 
-    |>> (OneOrMany<_>.toList >> charListToStr)
-let pIntegerLiteral = (pHexIntegerLiteral |>> strToHex)  <|> (pDecimalInteger |>> Convert.ToInt16)  |>> NumberLiteral.Short
-let pPrefixFloat = pDecimalInteger .>>. pstring "." .>>. many pDigit
-let pPostfixFloat = retn "0" .>>. pstring "." .>>. (many1 pDigit |>> OneOrMany<_>.toList)
-let pFloatingPointLiteral = 
-    pPrefixFloat <|> pPostfixFloat 
+let hexDigit = anyOf (['0' ..'9'] @ ['A' .. 'F'])
+let nonZeroDigit = anyOf ['1' .. '9']
+let decimalInteger = 
+   (nonZeroDigit .>>. many digit |>> (List.Cons >> charListToStr)) <|> parseString "0" 
+let hexIntegerLiteral = 
+    parseString "0h" >>. many1 hexDigit 
+    |>> (OneOrMany<_>.ToList >> charListToStr)
+let integerLiteral = (hexIntegerLiteral |>> strToHex)  <|> (decimalInteger |>> Convert.ToInt16)  |>> NumberLiteral.Short
+let prefixFloat = decimalInteger .>>. parseString "." .>>. many digit
+let postfixFloat = retn "0" .>>. parseString "." .>>. (many1 digit |>> OneOrMany<_>.ToList)
+let floatingPointLiteral = 
+    prefixFloat <|> postfixFloat 
     |>> fun ((pre,dec),post) -> (Convert.ToSingle(pre + dec + (charListToStr post))  |> NumberLiteral.Single)
 
-
-let pStringLiteral = 
-    let quot = pchar '"'
-    let pStringCharacter = notp quot &&. pInputCharacter
-    between quot (many pStringCharacter) quot
+let stringLiteral = 
+    let quot = parseChar '"'
+    let stringCharacter = notp quot &&. inputCharacter
+    between quot (many stringCharacter) quot
     |>> (charListToStr >> StringLiteral)
-let pComma = pchar ','
-let pStatementSeparator = pchar ';'
-let pAssignmentOp = pstring "=" |>>! AssignOp
-let pAnd = pstring "AND" |>>! And
-let pOr = pstring "OR" |>>! Or
-let pRelationalOp = 
+let comma = parseChar ','
+let statementSeparator = parseChar ';'
+let assignmentOp = parseString "=" |>>! AssignOp
+let AND = parseString "AND" |>>! And
+let OR = parseString "OR" |>>! Or
+let relationalOp = 
     choice [
-        pstring ">" |>>! Gt;
-        pstring "<" |>>! Lt;
-        pstring "==" |>>! Eq;
-        pstring "!="  |>>! Ne]
+        parseString ">" |>>! Gt;
+        parseString "<" |>>! Lt;
+        parseString "==" |>>! Eq;
+        parseString "!="  |>>! Ne]
         
-let pStringConcatOp =  pstring "<<" |> maybeSpace
-let pAdditiveOp = choice [pstring "+" |>>! Plus;
-                          pstring "-" |>>! Minus]
-let pMultiplicativeOp = choice [pstring "*" |>>! Mul;
-                                pstring "/" |>>! Div]
+let stringConcatOp =  parseString "<<" |> ignoreSpace
+let additiveOp = choice [parseString "+" |>>! Plus;
+                          parseString "-" |>>! Minus]
+let multiplicativeOp = choice [parseString "*" |>>! Mul;
+                                parseString "/" |>>! Div]
 
-let pBetweenParens p = betweenC '(' (maybeSpace p) ')'
-                      |> between pIgnore <| pIgnore
-let pBetweenBrace p = betweenC '{' (maybeSpace p) '}'
-                      |> between pIgnore <| pIgnore
+let betweenParens p = 
+    betweenC '(' (ignoreSpace p) ')'
+    |> between anyWhitespace <| anyWhitespace
+let betweenBrace p = 
+    betweenC '{' (ignoreSpace p) '}'
+    |> between anyWhitespace <| anyWhitespace
 //Semantic
-let pPrimaryStringExpression =  ((pStringIdentifier |>> SVar) <|> (pStringLiteral |>> SLiteral)) |> maybeSpace
-let pStringExpression = sepBy1 pPrimaryStringExpression pStringConcatOp |> maybeSpace
+let primaryStringExpression =  ((stringIdentifier |>> SVar) <|> (stringLiteral |>> SLiteral)) |> ignoreSpace
+let stringExpression = sepBy1 primaryStringExpression stringConcatOp |> ignoreSpace
 
 let rec mapArithmeticExpression (expr:ParsedArithmeticExpression) : ArithmeticExpression = 
     match expr with 
@@ -171,72 +171,69 @@ and mapPrimary = function
     | Expr(expr) -> mapArithmeticExpression expr
     | Literal(lit) ->  ArithmeticLiteral lit
 
-
-
-
-let pArithmeticExpression = 
-    let rec pParsedArithExpression a = 
+let arithmeticExpression = 
+    let rec parsedArithExpression a = 
         (notp parseEOF) >>= (fun _ -> 
             choice [
-                pAdditiveArithmeticExpression a |>> Add
-                pUnaryArithmeticExpression a;] |> maybeSpace)
-    and pUnaryArithmeticExpression a=  
-        pAdditiveOp .>->. (pPrimaryArithmeticExpression a) |> maybeSpace |>> Unary
-    and pAdditiveArithmeticExpression a = 
-        (pMultiplicativeArithmeticExpression a) .>->. many (pAdditiveArithmeticExpression' a    .>> pIgnore) |> maybeSpace
+                additiveArithmeticExpression a |>> Add
+                unaryArithmeticExpression a;] |> ignoreSpace)
+    and unaryArithmeticExpression a=  
+        additiveOp .>->. (primaryArithmeticExpression a) |> ignoreSpace |>> Unary
+    and additiveArithmeticExpression a = 
+        (multiplicativeArithmeticExpression a) .>->. many (additiveArithmeticExpression' a    .>> anyWhitespace) |> ignoreSpace
         |>> fun (primary,additive) ->
             let rec makeAdditive = function
                 | (mul,[]) -> Multiplicative mul
                 | (mul,(op,mul2)::tail) -> (makeAdditive(mul,tail),op,mul2) |> AddOpExpr
             makeAdditive (primary,additive)
-    and pAdditiveArithmeticExpression' a = 
-        pAdditiveOp .>->. (pMultiplicativeArithmeticExpression a)   |> maybeSpace
-    and pMultiplicativeArithmeticExpression a = 
-        (pPrimaryArithmeticExpression a) .>->. many (pMultiplicativeArithmeticExpression' a    .>> pIgnore)  |> maybeSpace
+    and additiveArithmeticExpression' a = 
+        additiveOp .>->. (multiplicativeArithmeticExpression a)   |> ignoreSpace
+    and multiplicativeArithmeticExpression a = 
+        (primaryArithmeticExpression a) .>->. many (multiplicativeArithmeticExpression' a    .>> anyWhitespace)  |> ignoreSpace
         |>> fun (primary,multiplicative) ->
             let rec makeMultiplicative = function
                 | (primary,[]) -> Primary primary
                 | (primary,(op,primary2)::tail) -> (makeMultiplicative(primary,tail),op,primary2) |> MulOpExpr
             makeMultiplicative (primary,multiplicative)
-    and pMultiplicativeArithmeticExpression' a = 
-        pMultiplicativeOp .>->. (pPrimaryArithmeticExpression a)  |> maybeSpace
-    and pPrimaryArithmeticExpression a = 
-                choice [pArithmeticIdentifier |>> Var;
-                    pFloatingPointLiteral |>> Literal;
-                    pIntegerLiteral |>> Literal;
-                    pBetweenParens (pParsedArithExpression a) |>> Expr]    |> maybeSpace
-    pParsedArithExpression () |>> mapArithmeticExpression
+    and multiplicativeArithmeticExpression' a = 
+        multiplicativeOp .>->. (primaryArithmeticExpression a)  |> ignoreSpace
+    and primaryArithmeticExpression a = 
+                choice [arithmeticIdentifier |>> Var;
+                    floatingPointLiteral |>> Literal;
+                    integerLiteral |>> Literal;
+                    betweenParens (parsedArithExpression a) |>> Expr]    |> ignoreSpace
+    parsedArithExpression () |>> mapArithmeticExpression
 
-let pStringAssign = pStringIdentifier .>-> pAssignmentOp .>->. pStringExpression |>> StringAssign
-let pArithmeticAssign = pArithmeticIdentifier .>-> pAssignmentOp .>->. pArithmeticExpression |>> ArithmeticAssign
-let pAssignmentExpression = (pStringAssign <|> pArithmeticAssign) |>maybeSpace
+let stringAssignment = stringIdentifier .>-> assignmentOp .>->. stringExpression |>> StringAssignment
+let arithmeticAssignment = arithmeticIdentifier .>-> assignmentOp .>->. arithmeticExpression |>> ArithmeticAssignment
+let assignmentExpression = (stringAssignment <|> arithmeticAssignment) |>ignoreSpace
     
-let pAssignmentStatement =  
+let assignmentStatement =  
     (notp parseEOF) >>= (fun _ ->
-    pAssignmentExpression .>-> pStatementSeparator |> maybeSpace
+    assignmentExpression .>-> statementSeparator |> ignoreSpace
     |>> Assign     
     )
-let optStatementSep = opt pStatementSeparator
-let optAssign = opt pAssignmentExpression  
-let pPrimaryArithmeticRelationalExpression = 
+let optStatementSep = opt statementSeparator
+let optAssign = opt assignmentExpression  
+let primaryArithmeticRelationalExpression = 
     choice [
-        pArithmeticIdentifier |>> PrimeRelAVid;
-        pFloatingPointLiteral |>> PrimaryRelALit
-        pIntegerLiteral |>> PrimaryRelALit;
-    ]  |> maybeSpace
-let pPrimaryStringRelationalExpression = 
+        arithmeticIdentifier |>> PrimeRelAVid;
+        floatingPointLiteral |>> PrimaryRelALit
+        integerLiteral |>> PrimaryRelALit;
+    ]  |> ignoreSpace
+let primaryStringRelationalExpression = 
     choice [
-        pStringIdentifier |>> PrimaryRelSVid
-        pStringLiteral |>> PrimaryRelSLit
-    ] |> maybeSpace
-let pArith = pPrimaryArithmeticRelationalExpression .>->. pRelationalOp .>->. pPrimaryArithmeticRelationalExpression
-let pString = pPrimaryStringRelationalExpression .>->. pRelationalOp .>->. pPrimaryStringRelationalExpression 
-let pRelationalExpression = 
+        stringIdentifier |>> PrimaryRelSVid
+        stringLiteral |>> PrimaryRelSLit
+    ] |> ignoreSpace
+let arithmeticRelationalExpression = primaryArithmeticRelationalExpression .>->. relationalOp .>->. primaryArithmeticRelationalExpression
+let stringRelationalExpression = primaryStringRelationalExpression .>->. relationalOp .>->. primaryStringRelationalExpression 
+let relationalExpression = 
     choice [
-        pArith |>> (untuple >> Arith);
-        pString |>> (untuple >> Str)] |> maybeSpace |>> JustRelational
+        arithmeticRelationalExpression |>> (untuple >> Arith);
+        stringRelationalExpression |>> (untuple >> Str)] |> ignoreSpace |>> JustRelational
 
-let pLogicalOp = pAnd <|> pOr
+let logicalOp = AND <|> OR
 let rec mapConditional = function 
     | rl, [] -> rl |> JustAnd 
     | baseRl, (Or,rl1)::(And,JustRelational(rl2))::tail -> 
@@ -250,50 +247,51 @@ let rec mapConditional = function
     | baseRl, (And,a)::tail -> 
         (LogicalAnd(baseRl,LExpr(JustAnd(a))),tail) |> mapConditional
 
-let pConditionalExpression = 
-    pRelationalExpression .>->. many (pLogicalOp .>->. pRelationalExpression .>-> pIgnore)
+let conditionalExpression = 
+    relationalExpression .>->. many (logicalOp .>->. relationalExpression .>-> anyWhitespace)
     |>> mapConditional
-let pVariableList = sepBy1 ((pStringIdentifier |>> SVID) <|> (pArithmeticIdentifier |>> AVID)) (maybeSpace pComma)
-let pInputStatement = 
-    pREAD >->. (pBetweenParens pVariableList) .>-> pStatementSeparator
+let variableList = sepBy1 ((stringIdentifier |>> SVID) <|> (arithmeticIdentifier |>> AVID)) (ignoreSpace comma)
+let inputStatement = 
+    READ >->. (betweenParens variableList) .>-> statementSeparator
     |>> (Read >> Input)
-let pOutputLine = 
+let outputLine = 
     fun str -> 
-        match run pVariableList str, run pStringLiteral str with
+        match runParser variableList str, runParser stringLiteral str with
         | Success (vars,remaining), _ -> Success(Vars vars,remaining)
         | _, Success (strLiterals,remaining) -> Success(StringOutputLine strLiterals,remaining)
         | _,_ -> Success(Empty,str)
     |> Parser
 
-let pOutputStatement = 
-    pWRITE >->. (pBetweenParens pOutputLine) .>-> pStatementSeparator
+let outputStatement = 
+    WRITE >->. (betweenParens outputLine) .>-> statementSeparator
     |>> (Write >> Output)
 
-let pStatement =
-    let rec pStatement a = 
+let statement =
+    let rec statement a = 
         (notp parseEOF) >>= (fun _ ->
-        choice [pAssignmentStatement;
-        pSelectionStatement a;
-        pIterStatement a;
-        pInputStatement;pOutputStatement] |> maybeSpace)
-    and pSelectionStatement a = 
-        pIF >->. pBetweenParens pConditionalExpression .>-> pTHEN .>->. 
-        (pStatement a |> many1 |> pBetweenBrace ) .>->. 
+        choice [assignmentStatement;
+        selectionStatement a;
+        iterStatement a;
+        inputStatement;
+        outputStatement] |> ignoreSpace)
+    and selectionStatement a = 
+        IF >->. betweenParens conditionalExpression .>-> THEN .>->. 
+        (statement a |> many1 |> betweenBrace ) .>->. 
         opt (
-            pELSE >->. 
-            (pStatement a |> many1 |> pBetweenBrace )
+            ELSE >->. 
+            (statement a |> many1 |> betweenBrace )
         ) .>-> optStatementSep
         |>> fun ((c,ifStatements),optElse) ->
             Select(c,ifStatements,optElse)
-    and pIterStatement a = 
-        pFOR >->. pBetweenParens (optAssign.>-> pComma .>->. pConditionalExpression .>-> pComma .>->. optAssign) .>->
-        pDO .>->. (pStatement a |> many |>  pBetweenBrace) .>-> optStatementSep 
+    and iterStatement a = 
+        FOR >->. betweenParens (optAssign.>-> comma .>->. conditionalExpression .>-> comma .>->. optAssign) .>->
+        DO .>->. (statement a |> many |>  betweenBrace) .>-> optStatementSep 
         |>> fun (((assOp,cond),assOp2),statements) ->
             Iter(assOp,cond,assOp2,statements)
-    pStatement()
+    statement()
 
 
-let pProgram = pPLATYPUS >->. (pStatement |> many |>  pBetweenBrace) |> maybeSpace .>>. parseEOF |>> Platypus 
+let program = PLATYPUS >->. (statement |> many |>  betweenBrace) |> ignoreSpace .>>. parseEOF |>> Platypus 
 
 let buffer file = System.IO.File.ReadAllText file
 let one dir f = 

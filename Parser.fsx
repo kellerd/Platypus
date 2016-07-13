@@ -1,5 +1,3 @@
-
-open System
 type Result<'a>  = 
     | Success of 'a
     | Failure of string
@@ -12,22 +10,22 @@ let failParse err = (fun _ -> Failure(err))
                     |> Parser
 let Zero = retn ()
 
-let run (Parser parser) input = 
+let runParser (Parser parser) input = 
     parser input
 let orElse p1 p2 = 
     fun str ->
-        match run p1 str with
+        match runParser p1 str with
         | Success (value,left) ->  Success(value,left)
         | Failure (err) -> 
-            match run p2 str with
+            match runParser p2 str with
             | Success (value, left) -> Success(value,left)
             | Failure _ -> Failure(err)
     |> Parser       
 let andAlso p1 p2 = 
     fun str ->
-        match run p1 str with
+        match runParser p1 str with
         | Success (value,_) ->  
-            match run p2 str with
+            match runParser p2 str with
             | Success (value2, left) -> Success((value,value2),left)
             | Failure err -> Failure(err)
         | Failure (err) -> Failure(err)
@@ -35,8 +33,8 @@ let andAlso p1 p2 =
 
 let bind f x =
     (fun input -> 
-        match run x input with
-        | Success(value,left) -> run (f value) left
+        match runParser x input with
+        | Success(value,left) -> runParser (f value) left
         | Failure err -> Failure err)
     |> Parser 
 type ParserBuilder() = 
@@ -77,7 +75,7 @@ let (>>.) p1 p2 = p1 .>>. p2 |>> snd
 let lift2 f xP yP =
     retn f <*> xP <*> yP
 let rec parseZeroOrMore parser input =
-    match run parser input  with
+    match runParser parser input  with
     | Failure _ -> ([],input)  
     | Success (firstValue,inputAfterFirstParse) -> 
         let (subsequentValues,remainingInput) = 
@@ -103,7 +101,7 @@ let rec sequence parsers =
 
 let notp parser  = 
     fun str ->
-        match run parser str with
+        match runParser parser str with
         | Success _ -> Failure "Matched, failing notp"
         | Failure _ -> Success((),str)
     |> Parser

@@ -1,13 +1,13 @@
 type SEOF = SEOF
 type OneOrMany<'a> = | One of 'a | Many of 'a * 'a list
- with static member toList oneOrMany = 
+ with static member ToList oneOrMany = 
                     match oneOrMany with
                     | One a -> [a]
                     | Many (head,tail) -> head::tail
-      static member ofList head tail =
+      static member OfList head tail =
         match tail with 
         | [] -> One(head)
-        | xs -> Many(head,tail)
+        | xs -> Many(head,xs)
 type ArithmeticVariableIdentifier = ArithmeticVariableIdentifier of string
 type StringVariableIdentifier = StringVariableIdentifier of string
 type ArithmeticOp = Plus | Minus | Mul | Div
@@ -63,8 +63,8 @@ and PrimaryArithRelationalExpression =
 
 type AssignmentStatement = AssignmentExpression
 and AssignmentExpression = 
-    | ArithmeticAssign of ArithmeticVariableIdentifier * ArithmeticExpression
-    | StringAssign of StringVariableIdentifier * StringExpression OneOrMany
+    | ArithmeticAssignment of ArithmeticVariableIdentifier * ArithmeticExpression
+    | StringAssignment of StringVariableIdentifier * StringExpression OneOrMany
 
 type InputStatement = Read of Variable OneOrMany
 and Variable = AVID of ArithmeticVariableIdentifier | SVID of StringVariableIdentifier
