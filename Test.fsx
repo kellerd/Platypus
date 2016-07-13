@@ -1,25 +1,26 @@
-#load "Platypus.fsx"
+#load "Interpret.fsx"
 open System
 open Platypus
 open Parser
-
+open Interpret
 
 let getFiles = (IO.Path.Combine (__SOURCE_DIRECTORY__, "Sample Code\\Bonus3\\"),"*.pls") |> IO.Directory.EnumerateFiles
-let runProgs = getFiles |> Seq.map (fun f -> f,(f |> buffer |> run pProgram))
-let one dir f = 
-    IO.Path.Combine (__SOURCE_DIRECTORY__, dir, f) 
-    |> buffer 
-    |> run pProgram
-
-runProgs  |> Seq.filter(function _,Failure(err) -> true | _,Success _ -> false)
+let parseProgs = getFiles |> Seq.map (fun f -> f,(f |> buffer |> run pProgram))
 
 
-one "Sample Code\\Bonus3\\" "ass2r.pls"
+parseProgs  |> Seq.filter(function _,Failure(err) -> true | _,Success _ -> false)
 
-run pProgram "PLATYPUS  
+
+let progs = [
+     "PLATYPUS  
     \> Comment
     \> Comment
     \> Comment
- {IF(\"1\"==\"2\"OR\"3\"==\"4\"AND\"5\"==\"6\")THEN{WRITE(\"a\");};}"
-run pProgram "PLATYPUS{FOR(,\"1\"==\"2\"OR\"3\"==\"4\"AND\"5\"==\"6\",)DO{WRITE(\"a\");};}"
-run pProgram "PLATYPUS{WRITE(a,b,c);}"
+ {IF(\"1\"==\"1\"OR\"3\"==\"4\"AND\"5\"==\"5\")THEN{WRITE(\"a\");};}";
+"PLATYPUS{FOR(,\"1\"==\"2\"OR\"3\"==\"4\"AND\"5\"==\"6\",)DO{WRITE(\"a\");};}";
+"PLATYPUS{FOR(i=1,i5,i=i+1)DO{WRITE(\"a\");};}";
+"PLATYPUS{WRITE(a,b,c);}";]
+let parse = progs |> List.map (run pProgram)
+let interpret = progs |> List.iter (doProgram)
+
+one "Sample Code\\Bonus3\\" "svTest.pls" |> doProgram

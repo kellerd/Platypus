@@ -1,11 +1,11 @@
 #load "Platypus.fsx"
+open System.Linq
 open System
 open Platypus
 open Parser
 open Language
 open System.Collections.Generic
 let evalProgram (globalVars: IDictionary<string,obj>) (program:Program) =
-    
     let (|AVariableId|_|) = function
         | (ArithmeticVariableIdentifier(vid)) -> (globalVars.TryGetValue(vid) |> function (true,v) -> Some v | _ -> None)
     let (|SingleVar|ShortVar|) (o:obj) = 
@@ -20,33 +20,33 @@ let evalProgram (globalVars: IDictionary<string,obj>) (program:Program) =
         | SVID (StringVariableIdentifier(vid)) -> (globalVars.TryGetValue(vid)  |> function (true,v) -> Some(unbox<string> v) | _ -> None)
         | _ -> None
     let printVar = function
-            | AVariable(SingleVar(v)) -> sprintf "Float 32 Value: %f" v 
-            | AVariable(ShortVar(v)) -> sprintf "Int 16 Value: %d" v 
+            | AVariable(SingleVar(v)) -> sprintf "%f" v 
+            | AVariable(ShortVar(v)) -> sprintf "%d" v 
             | SVariable(v) -> sprintf "%s" <| unbox<string> v 
-            | _ -> sprintf "null"
+            | _ -> sprintf ""
     let removeIfFound key = 
         if globalVars.ContainsKey key then
             globalVars.Remove(key) |> ignore
         globalVars
     let setVar var value = //Default should be int, upcast to float, stays float
         match var,value with
-        | AVID ((ArithmeticVariableIdentifier(vid))),SingleVar(v) -> 
+        | AVariable(SingleVar(_)) & AVID (ArithmeticVariableIdentifier(vid)),ShortVar(v) -> 
+            (removeIfFound vid).Add(vid,box (v |> float32))
+        | AVariable(ShortVar(_)) & AVID (ArithmeticVariableIdentifier(vid)),ShortVar(v) 
+        | AVID (ArithmeticVariableIdentifier(vid)),ShortVar(v) -> 
             (removeIfFound vid).Add(vid,box v)
-        | AVID ((ArithmeticVariableIdentifier(vid))),ShortVar(v) -> 
+        | AVariable(ShortVar(_)) & AVID (ArithmeticVariableIdentifier(vid)),SingleVar(v) -> 
+            (removeIfFound vid).Add(vid,box (v |> int16))
+        | AVariable(SingleVar(_)) & AVID (ArithmeticVariableIdentifier(vid)),SingleVar(v) 
+        | AVID ((ArithmeticVariableIdentifier(vid))),SingleVar(v) -> 
             (removeIfFound vid).Add(vid,box v)
         | SVID (StringVariableIdentifier(vid)),v-> 
             (removeIfFound vid).Add(vid,box v)
-//    let evalAExpression expression = 
     let stringExpressionToString = function 
-        | SVar(v) -> match SVID(v) with
-                        | SVariable(s) -> s 
-                        | _ -> ""
+        | SVar(v) -> match SVID(v) with SVariable(s) -> s | _ -> ""
         | SLiteral(StringLiteral(s)) -> s     
     let evalSExpression expression = 
         expression |> OneOrMany<_>.toList |> List.map stringExpressionToString |> String.concat ""
-
-    
-
     let evalAExpression expr = 
         let rec (|IsFloat|_|) expr = 
             let rec mapFloatExpr = function
@@ -83,27 +83,75 @@ let evalProgram (globalVars: IDictionary<string,obj>) (program:Program) =
                 | ArithmeticVariable(AVariableId(SingleVar(v))) -> Single(v)
                 | ArithmeticVariable(_) -> Short(Unchecked.defaultof<int16>)
                 | ArithmeticLiteral(v) ->  v
-//            match expr with 
-//            | IsFloat(expr) -> evalArithmetic' validateNumeric<float32> addzero expr  |> box
-//            | _ -> evalArithmetic' validateNumeric<int16> addzero expr  |> box
-        
         evalArithmetic expr 
-    let evalStatements = function
+    let (|TryShort|_|) input = match Int16.TryParse(input) with
+                               | true,i -> Some i
+                               | false,_ -> None
+    let (|TrySingle|_|) input = match System.Single.TryParse(input) with
+                                | true,f -> Some f
+                                | false,_ -> None
+    let evalReadVar setVar = function
+        | SVID(_) as var -> Console.ReadLine() |> box |> setVar var
+        | AVID(_) as var -> match Console.ReadLine() with
+                            | TryShort i -> setVar var <| box i
+                            | TrySingle f -> setVar var <| box f
+                            | _ -> failwith "Expected short integer or single float"
+
+    let evalConditional = 
+        let comp = function
+            | (a,Eq,b) -> a = b
+            | (a,Ne,b) -> a <> b
+            | (a,Gt,b) -> a > b
+            | (a,Lt,b) -> a < b
+        let rec compA = function
+            | Short(a),op,Single(b) -> (Single(a|>float32),op,Single(b)) |> compA
+            | Single(a),op,Short(b) -> (Single(a),op,Single(b|>float32)) |> compA
+            | (a,Eq,b) -> a = b
+            | (a,Ne,b) -> a <> b
+            | (a,Gt,b) -> a > b
+            | (a,Lt,b) -> a < b
+        let evalPrimaryNum = function
+            | PrimaryRelALit (f) -> f
+            | PrimeRelAVid (AVariableId(ShortVar(v))) -> Short(v)
+            | PrimeRelAVid (AVariableId(SingleVar(v))) -> Single(v)
+            | _ -> Short(0s)
+        let evalPrimaryString = function
+            | PrimaryRelSVid (v) -> match SVID(v) with SVariable(s) -> s | _ -> ""
+            | PrimaryRelSLit  (StringLiteral(s)) -> s
+
+        let rec evalLogicalOr = function
+            | LogicalOr(logicalOr,logicalAnd) -> evalLogicalOr logicalOr || evalLogicalAnd logicalAnd
+            | JustAnd (logicalAnd) -> evalLogicalAnd logicalAnd
+        and evalLogicalAnd = function
+            | LogicalAnd (logicalAnd , relational) -> evalLogicalAnd logicalAnd && evalRelational relational
+            | JustRelational (relational) -> evalRelational relational
+        and evalRelational = function
+            | Str (primaryString , op , primaryString2) -> 
+                 (evalPrimaryString primaryString,op,evalPrimaryString primaryString2) |> comp // (writePre >> comp >> writePost)
+            | Arith (primaryNum , op , primaryNum2) ->
+               (evalPrimaryNum primaryNum,op,evalPrimaryNum primaryNum2) |> compA //(writePre >> compA >> writePost)
+            | LExpr (logicalOr) -> evalLogicalOr logicalOr
+        evalLogicalOr
+    let rec evalStatement = function
         | Output(Write(Empty)) ->  printfn ""
         | Output(Write(StringOutputLine(StringLiteral(s)))) -> s |> System.Text.RegularExpressions.Regex.Unescape |> printfn "%s"
         | Output (Write(Vars(vars))) -> OneOrMany<_>.toList vars |> List.map printVar |> String.concat ""  |> System.Text.RegularExpressions.Regex.Unescape |> printfn "%s" 
         | Assign(ArithmeticAssign(var,expression)) -> evalAExpression expression |> (function | Short(v) -> v |> setVar (AVID var)
                                                                                               | Single(v) -> v |> setVar (AVID var))
         | Assign(StringAssign(var,expression)) -> evalSExpression expression |> setVar (SVID var)
-        // | Select(_) -> failwith "Not implemented yet"
-        // | Iter(_) -> failwith "Not implemented yet"
-        // | Input(_) -> failwith "Not implemented yet"
-//        | Assign
-//        | Select
-//        | Iter 
-//        | Input 
+        | Input(Read(vars)) -> OneOrMany<_>.toList vars |> List.iter (evalReadVar setVar)
+        | Select(cond,statements,maybeElseStatements) -> 
+            if (evalConditional cond) then
+                OneOrMany<_>.toList statements |> List.iter evalStatement
+            else
+                maybeElseStatements |> Option.map (OneOrMany<Statement>.toList) |> Option.iter (List.iter evalStatement)
+        | Iter(maybeExpr,cond,maybeIncrement,statements) -> 
+            maybeExpr |> Option.iter (Assign >> evalStatement)
+            while (evalConditional cond) do
+                statements |> List.iter evalStatement
+                maybeIncrement |> Option.iter (Assign >> evalStatement)
     match program with 
-    | Platypus (statements,_) -> List.iter evalStatements statements 
+    | Platypus (statements,_) -> List.iter evalStatement statements 
 
 let doProgram program = 
     let blank = (new Dictionary<string,obj>())
@@ -112,10 +160,10 @@ let doProgram program =
     match run pProgram program with
     | Success (p,_) -> context p
     | Failure (err) -> printfn "%s" err
+    printfn "%A" (blank)
     blank.Clear()
 
-let pls = """PLATYPUS{c = 5/10.0 ;WRITE(c);}     """ 
-doProgram pls
-one "Sample Code\\Bonus3" "string.pls" |> doProgram
+// let pls = """PLATYPUS{FOR(i=0,i<5,i=i+1){WRITE(i);}}     """ 
+// doProgram pls
 
 
