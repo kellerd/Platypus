@@ -276,16 +276,16 @@ let statement =
         outputStatement] |> ignoreSpace)
     and selectionStatement a = 
         IF >->. betweenParens conditionalExpression .>-> THEN .>->. 
-        (statement a |> many1 |> betweenBrace ) .>->. 
+        (many1 (statement a) |> betweenBrace ) .>->. 
         opt (
             ELSE >->. 
-            (statement a |> many1 |> betweenBrace )
+            (many1 (statement a) |> betweenBrace )
         ) .>-> optStatementSep
         |>> fun ((c,ifStatements),optElse) ->
             Select(c,ifStatements,optElse)
     and iterStatement a = 
         FOR >->. betweenParens (optAssign.>-> comma .>->. conditionalExpression .>-> comma .>->. optAssign) .>->
-        DO .>->. (statement a |> many |>  betweenBrace) .>-> optStatementSep 
+        DO .>->. ( many (statement a) |> betweenBrace) .>-> optStatementSep 
         |>> fun (((assOp,cond),assOp2),statements) ->
             Iter(assOp,cond,assOp2,statements)
     statement()

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Name>Parser</Name>
@@ -49,12 +49,13 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <None Include="Parser.fsx" />
     <None Include="Language.fsx" />
-    <None Include="Platypus.fsx" />
     <None Include="App.config" />
+    <None Include="Platypus.fsx" />
     <None Include="Test.fsx" />
     <None Include="Interpret.fsx" />
   </ItemGroup>

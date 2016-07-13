@@ -23,22 +23,25 @@ Typical use cases would be for users to enter in a specific format, and easily t
 - Creates abstract syntax tree from combining tiny parsers into larger ones
 - Custom operators for combining parsers in certain ways
 - Parsers almost read the way the code would be written
-        
-        pIF >->. pBetweenParens pConditionalExpression .>-> pTHEN .>->. 
-            (pStatement a |> many1 |> pBetweenBrace ) .>->. 
-            opt (
-                pELSE >->. 
-                (pStatement a |> many1 |> pBetweenBrace )
-            ) .>-> optStatementSep
-
-        let pStringAssign = pStringIdentifier .>-> pAssignmentOp .>->. pStringExpression |>> StringAssign
-        let pArithmeticAssign = pArithmeticIdentifier .>-> pAssignmentOp .>->. pArithmeticExpression |>> ArithmeticAssign
-        let pAssignmentExpression = (pStringAssign <|> pArithmeticAssign) |> maybeSpace
+---     
+        let selectionStatement = 
+          IF >->. betweenParens conditionalExpression .>-> THEN .>->. 
+          (many1 (statement a) |> betweenBrace ) .>->. 
+          opt (
+              ELSE >->. 
+              (many1 (statement a) |> betweenBrace )
+          ) .>-> optStatementSep
+---
+        let stringAssignment = stringIdentifier .>-> assignmentOp .>->. stringExpression |>> StringAssignment
+        let arithmeticAssignment = arithmeticIdentifier .>-> assignmentOp .>->. arithmeticExpression |>> ArithmeticAssignment
+        let assignmentExpression = (stringAssignment <|> arithmeticAssignment) |>ignoreSpace
+---
 - Language spec is both defined in strongly typed system and is mirrored in parser implementation
-    type ArithmeticExpression = 
-    | Arithmetic of ArithmeticExpression * ArithmeticOp * ArithmeticExpression
-    | ArithmeticVariable of ArithmeticVariableIdentifier
-    | ArithmeticLiteral of NumberLiteral
+
+      type ArithmeticExpression = 
+      | Arithmetic of ArithmeticExpression * ArithmeticOp * ArithmeticExpression
+      | ArithmeticVariable of ArithmeticVariableIdentifier
+      | ArithmeticLiteral of NumberLiteral
 
 - Monadic pass through - fast fail/shortcut
 - Pattern matching negates heavy nested ifs
@@ -60,14 +63,16 @@ Typical use cases would be for users to enter in a specific format, and easily t
 - Changes or corrections to language specification will show up everywhere that it's affected in code as errors
 - When the combinators get a little crazy functional programming, you can tone it down and use imperative style with Computation Expression `parse { }`
 - Patterm matching can find all of the combinations and give a F# compiler warning if not all options are included. Take out one, it will highlight the statement
-    | (Short(lit),Plus,Short(lit2)) -> Short(lit + lit2)
-    | (Short(lit),Minus,Short(lit2)) -> Short(lit - lit2)
-    | (Short(lit),Mul,Short(lit2)) -> Short(lit * lit2)
-    | (Short(lit),Div,Short(lit2)) -> Short(lit / lit2)
-    | (Single(lit),Plus,Single(lit2)) -> Single(lit + lit2)
-    | (Single(lit),Minus,Single(lit2)) -> Single(lit - lit2)
-    | (Single(lit),Mul,Single(lit2)) -> Single(lit * lit2)
-    | (Single(lit),Div,Single(lit2)) -> Single(lit / lit2)
+
+      | (Short(lit),Plus,Short(lit2)) -> Short(lit + lit2)
+      | (Short(lit),Minus,Short(lit2)) -> Short(lit - lit2)
+      | (Short(lit),Mul,Short(lit2)) -> Short(lit * lit2)
+      | (Short(lit),Div,Short(lit2)) -> Short(lit / lit2)
+      | (Single(lit),Plus,Single(lit2)) -> Single(lit + lit2)
+      | (Single(lit),Minus,Single(lit2)) -> Single(lit - lit2)
+      | (Single(lit),Mul,Single(lit2)) -> Single(lit * lit2)
+      | (Single(lit),Div,Single(lit2)) -> Single(lit / lit2)
+
 - Type inference, less typing, how you write the code will let it determine the types
     - let a = 5.3
         - a is of type float
