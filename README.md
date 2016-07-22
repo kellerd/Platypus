@@ -1,10 +1,13 @@
 #Platypus Parser
+
 The main goal was to re-implement a compilers assignment from 12 years ago, into F# to explore Parser Combinators. Which are a quick to write/easy success way to make a quick parser for given Domain Specific Language or other.
 
 Typical use cases would be for users to enter in a specific format, and easily transform to a Expression Tree.
 
 #Features
+
 ## C
+
 - Recursive Top Down Parser
 - Creates a stack of operations
     - [Platypus]
@@ -18,7 +21,9 @@ Typical use cases would be for users to enter in a specific format, and easily t
 - Interpreter reads the stack of tokens, may modify the stack, then execute
 - Fed by state machine of characters and Scanner of Tokens
 - Lookahead heavily used
+
 ## FSharp
+
 - Recursive Top Down Parser Combinator
 - Creates abstract syntax tree from combining tiny parsers into larger ones
 - Custom operators for combining parsers in certain ways
@@ -79,10 +84,14 @@ Typical use cases would be for users to enter in a specific format, and easily t
     - let b = a * a
         - b is of type float
 # Disadvantages
+
 ## C
+
  - Own implementation of a file io buffer, scanner, tokenizer, state machine
  - Blows up on large loops due to recursion, PI max 20 or so iterations
+
 ## FSharp
+
 - Speed
 - Scrictness of the F# language makes writing a parser for a loose language harder.
   - Have to create a few work arounds, but doing so will create less runtime errors
@@ -102,7 +111,9 @@ Typical use cases would be for users to enter in a specific format, and easily t
   - Interpreter 756
   - Scanner 604
   - Parser 870
+
 ## FSharp
+
 - Infrastructure - (Total: 107)
   - Combinator functions - 107
 - Main  - (Total: 548)
