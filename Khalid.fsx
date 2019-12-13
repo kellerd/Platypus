@@ -102,7 +102,11 @@ let manyToString = OneOrMany<_>.ToList >> charListToStr
 
 let oracleIdentifier = 
     let singleId = anyOf (['a' .. 'z'] @ ['A' .. 'Z'] @ ['_'] @ ['0' .. '9']) |> many1 |> map manyToString
-    singleId .>>. opt (parseChar '.' >>. singleId) .>>. opt (parseChar '.' >>. singleId)
+    many whiteSpace
+    >>. singleId 
+    .>>. opt (parseChar '.' >>. singleId) 
+    .>>. opt (parseChar '.' >>. singleId)
+    .>> many whiteSpace
     |>> fun ((schema, table), column) -> 
         match table, column with
         | Some table, Some col -> schema + "." + table + "." + col 
@@ -118,9 +122,7 @@ let datatype =
     .>> many whiteSpace
     .>>. opt size
 let manyOracleIdentifier =
-    many whiteSpace 
-       >>. oracleIdentifier 
-       .>> many whiteSpace 
+    oracleIdentifier 
     |> many1
     |>> fun x -> OneOrMany<_>.ToList x |> String.concat ""
 
@@ -129,12 +131,18 @@ let constraints =
     <|> ( betweenC '('  manyOracleIdentifier  ')' ) 
 
 let columnDef = 
-  many whiteSpace
-  >>. oracleIdentifier
-  .>> many whiteSpace
+  oracleIdentifier
   .>>. datatype
   .>> many whiteSpace
   .>>. many constraints
+
+let columnList = 
+    let cols = sepBy oracleIdentifier (parseChar ',') 
+    betweenC '(' cols ')'
+    
+let orderByList = 
+    let cols = sepBy manyOracleIdentifier (parseChar ',') 
+    betweenC '(' cols ')'
 
 let tableDef =
   let cols = sepBy columnDef (parseChar ',') 
@@ -152,10 +160,13 @@ let CREATE objectType name =
     .>> many whiteSpace
     .>>. name
     |> map (fun (objectType, str) -> Create(str, objectType))
-    
+
+let statementTerminator = 
+    many whiteSpace .>> parseChar ';'  .>> many whiteSpace
+        
 let TABLE =  parseString "TABLE" |>> fun _ -> Table
 let COLUMN =  parseString "COLUMN" |>> fun _ -> Column
-let INDEX =  parseString "Index" |>> fun _ -> Index
+let INDEX =  (parseString "INDEX" <|> parseString "UNIQUE INDEX") |>> fun _ -> Index
 let VIEW =  parseString "VIEW" |>> fun _ -> View
 let MATERIALIZEDVIEW =  parseString "MATERIALIZED VIEW" |>> fun _ -> MaterializedView
 let SYNONYM =  parseString "SYNONYM" |>> fun _ -> Synonym
@@ -195,19 +206,27 @@ let Comment =
     .>> parseString "ON"
     .>> many whiteSpace
     .>> objectType
-    .>> many whiteSpace
      >>. oracleIdentifier
-    .>> many whiteSpace
     .>> parseString "IS"
     .>> many whiteSpace
     .>>. stringLiteral
     |>> Comment
-let statementTerminator = 
-    many whiteSpace .>> parseChar ';'  .>> many whiteSpace
+
+let Index =
+    CREATE INDEX oracleIdentifier
+    .>> many whiteSpace
+    .>> parseString "ON"
+    .>> oracleIdentifier
+    .>> orderByList
+    
+runParser Index "CREATE UNIQUE INDEX AH096_PK ON AH096_HRSR_USER_SEARCH
+( X.SEAR, CH )"
+
 let statement = 
     choice [
         CreateTable
         Comment
+        Index 
     ] 
 
 let SQLFile = 
