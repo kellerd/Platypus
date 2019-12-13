@@ -220,7 +220,7 @@ let result =
     //|> Seq.take 5
     |> Seq.map (System.IO.File.ReadAllText >> runParser SQLFile)
 
-Seq.find(function  Success(x, "") -> false | _ -> true) result 
+let err = Seq.find(function  Success(x, "") -> false | _ -> true) result 
 
 let thingsIWant =
     result 
