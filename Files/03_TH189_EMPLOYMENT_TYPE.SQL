@@ -11,7 +11,7 @@ CREATE TABLE TH189_EMPLOYMENT_TYPE
 );
 
 COMMENT ON TABLE TH189_EMPLOYMENT_TYPE IS 'Code table of the employment types. 
-To replace the existing employment types stored in the legacy table GLOBAL_VALIDATIONS (where glv_val_name = ''EMPLOYMENT_TYPES'').
+To replace the existing employment types stored in the legacy table GLOBAL_VALIDATIONS (where glv_val_name = EMPLOYMENT_TYPES).
 ';
 
 COMMENT ON COLUMN TH189_EMPLOYMENT_TYPE.EMPLOYMENT_TYPE_CD IS 'Code to uniquely represet the employment type code. ';

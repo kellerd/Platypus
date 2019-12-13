@@ -44,7 +44,7 @@ COMMENT ON COLUMN AH095_HRSR_STUDENT_DETAIL.OPERATIONAL_REQ_TXT IS 'A text field
 
 COMMENT ON COLUMN AH095_HRSR_STUDENT_DETAIL.EDUCATION_LEVEL_CD IS 'Foreign key to TH195_EDUCATION_LEVEL. Code identifying the education level. Values taken originally from GLOBAL_VALIDATIONS where glv_val_name = EDUCATION_LEVEL';
 
-COMMENT ON COLUMN AH095_HRSR_STUDENT_DETAIL.DAYS_OF_WEEK_TXT IS 'Student candidate''s days of week to work as a string of text. As a varchar2(7), counting from the right,position 1 points to Sunday, postion 2 points to Monday...position 7 points to Saturday. ';
+COMMENT ON COLUMN AH095_HRSR_STUDENT_DETAIL.DAYS_OF_WEEK_TXT IS 'Student candidates days of week to work as a string of text. As a varchar2(7), counting from the right,position 1 points to Sunday, postion 2 points to Monday...position 7 points to Saturday. ';
 
 
 CREATE INDEX AH095_IF2 ON AH095_HRSR_STUDENT_DETAIL

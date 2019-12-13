@@ -88,7 +88,8 @@ let letterOrDigit = letter <|> digit
 
 type ObjectType =
     | Table
-    | Column
+    | Column of string
+    | AddConstraint
     | Index
     | View
     | MaterializedView
@@ -98,6 +99,10 @@ type ObjectType =
 type SQLStatements =
     | Create of string * ObjectType
     | Comment of string * string
+    | Alter of string * ObjectType
+    | Constraint
+    | Grant
+    | Query
 let manyToString = OneOrMany<_>.ToList >> charListToStr
 
 let oracleIdentifier = 
@@ -115,8 +120,7 @@ let oracleIdentifier =
         | None, None -> schema
 
 let size = 
-    parseChar '('  .>> many whiteSpace >>. many1 digit .>> many whiteSpace .>> parseChar ')'
-    |>> manyToString |>> Convert.ToInt16
+    parseChar '('  .>> many (whiteSpace <|> digit <|> parseChar ',') .>> parseChar ')'
 let datatype = 
     many1 letterOrDigit |>> manyToString
     .>> many whiteSpace
@@ -128,7 +132,7 @@ let manyOracleIdentifier =
 
 let constraints = 
     manyOracleIdentifier
-    <|> ( betweenC '('  manyOracleIdentifier  ')' ) 
+    <|> ( betweenC '('  (sepBy manyOracleIdentifier (parseChar ',') |>> String.concat "")  ')' ) 
 
 let columnDef = 
   oracleIdentifier
@@ -149,12 +153,7 @@ let tableDef =
   betweenC '(' cols ')'
 
 let CREATE objectType name = 
-    parseString "CREATE" 
-    <|> (parseString "CREATE"
-        .>> many whiteSpace
-        .>> parseString "OR"
-        .>> many whiteSpace
-        .>> parseString "REPLACE")
+    (parseString "CREATE OR REPLACE" <|> parseString "CREATE")
     .>> many whiteSpace
     >>. objectType
     .>> many whiteSpace
@@ -162,10 +161,9 @@ let CREATE objectType name =
     |> map (fun (objectType, str) -> Create(str, objectType))
 
 let statementTerminator = 
-    many whiteSpace .>> parseChar ';'  .>> many whiteSpace
+    many whiteSpace .>> (parseChar ';' <|> parseChar '/')  .>> many whiteSpace
         
 let TABLE =  parseString "TABLE" |>> fun _ -> Table
-let COLUMN =  parseString "COLUMN" |>> fun _ -> Column
 let INDEX =  (parseString "INDEX" <|> parseString "UNIQUE INDEX") |>> fun _ -> Index
 let VIEW =  parseString "VIEW" |>> fun _ -> View
 let MATERIALIZEDVIEW =  parseString "MATERIALIZED VIEW" |>> fun _ -> MaterializedView
@@ -176,7 +174,6 @@ let PROCEDURE =  parseString "PROCEDURE" |>> fun _ -> StoredProc
 
 let objectType = choice [
     TABLE
-    COLUMN
     INDEX 
     VIEW
     MATERIALIZEDVIEW
@@ -205,7 +202,7 @@ let Comment =
     .>> many whiteSpace
     .>> parseString "ON"
     .>> many whiteSpace
-    .>> objectType
+    .>> (parseString "COLUMN" <|> parseString "TABLE")
      >>. oracleIdentifier
     .>> parseString "IS"
     .>> many whiteSpace
@@ -218,15 +215,55 @@ let Index =
     .>> parseString "ON"
     .>> oracleIdentifier
     .>> orderByList
-    
-runParser Index "CREATE UNIQUE INDEX AH096_PK ON AH096_HRSR_USER_SEARCH
-( X.SEAR, CH )"
+let Synonym =
+    CREATE PUBLICSYNONYM oracleIdentifier
+    .>> parseString "FOR" 
+    .>> oracleIdentifier
+
+let Grant = 
+    let command = 
+        [
+            "SELECT"; "INSERT"; "UPDATE"; "DELETE"; "EXECUTE"; "ALL"
+        ] |> List.map (fun str -> many whiteSpace >>. parseString str)
+        |> choice
+    parseString "GRANT"
+    .>> sepBy command (parseChar ',')  
+    .>> many whiteSpace
+    .>> parseString "ON"
+    .>> manyOracleIdentifier
+    |>> fun _ -> Grant
+let Query = 
+    let command = 
+        [
+            "SELECT"; "INSERT"; "UPDATE"; "DELETE"; "EXECUTE"; "COMMIT"
+        ] |> List.map (fun str -> many whiteSpace >>. parseString str)
+        |> choice
+    command .>> many (notp (parseChar ';') &&. inputCharacter)
+    |>> fun _ -> Query
+let AlterTable = 
+    let col = many whiteSpace >>. oracleIdentifier .>> many whiteSpace .>> datatype
+    let colList = betweenC '(' col ')'
+    let modifyList = betweenC '(' columnDef ')' <|> columnDef
+    parseString "ALTER TABLE" 
+    >>. oracleIdentifier
+    .>> many whiteSpace
+    .>>. ((parseString "ADD CONSTRAINT" .>> many constraints |>> fun _ -> AddConstraint)
+         <|> (parseString "ADD" >>. many whiteSpace >>. colList .>> many whiteSpace |>> Column )
+         <|> (parseString "MODIFY" >>. columnDef .>> many whiteSpace |>> fun ((s,_),_) -> Column s))
+    |>> fun (name, types) -> 
+        match types with 
+        | AddConstraint -> Constraint
+        | Column s -> Alter(name, types)
 
 let statement = 
     choice [
         CreateTable
         Comment
         Index 
+        Synonym
+        AlterTable
+        Grant
+        Query
     ] 
 
 let SQLFile = 
@@ -250,7 +287,9 @@ let thingsIWant =
         | Success(results, _) -> 
             results 
             |> List.choose(function 
-                | Create(name, _) -> Some name
+                | Create(name, _) -> Some ("CREATE TABLE " + name)
+                | Comment(name, comment) -> Some ("COMMENT " + name + " " + comment)
+                | Alter(name, Column(col)) -> Some ("ALTER TABLE " + name + "; Column " + col)
                 | _ -> None 
             )
         | _ -> [] 
