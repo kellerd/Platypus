@@ -202,15 +202,18 @@ let Comment =
     .>> many whiteSpace
     .>>. stringLiteral
     |>> Comment
-
+let statementTerminator = 
+    many whiteSpace .>> parseChar ';'  .>> many whiteSpace
 let statement = 
     choice [
         CreateTable
         Comment
-    ] .>> many whiteSpace .>> parseChar ';'  .>> many whiteSpace
+    ] 
 
 let SQLFile = 
-    many (many whiteSpace >>. statement)
+    let singleStatement =
+        many whiteSpace >>. statement .>> statementTerminator
+    many singleStatement
 
 let files = System.IO.Directory.EnumerateFiles (IO.Path.Combine(__SOURCE_DIRECTORY__, "Files"))
 
